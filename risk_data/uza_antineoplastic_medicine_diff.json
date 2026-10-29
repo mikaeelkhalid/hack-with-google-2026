@@ -1,0 +1,51 @@
+{
+  "single": {
+    "high": [
+      { "medication": "Cyclofosfamide", "dose_lower_bound": "1500 mg/m2", "dose_upper_bound": null, "administration_route": "IV" },
+      { "medication": "Doxorubicine", "dose_lower_bound": null, "dose_upper_bound": null, "administration_route": null },
+      { "medication": "Melphalan", "dose_lower_bound": null, "dose_upper_bound": null, "administration_route": "IV" },
+      { "medication": "Dactinomycine", "dose_lower_bound": "1.35 mg/m2", "dose_upper_bound": null, "administration_route": "IV" }
+    ],
+    "moderate": [
+      { "medication": "Cyclofosfamide", "dose_lower_bound": null, "dose_upper_bound": "1500 mg/m2", "administration_route": "IV" },
+      { "medication": "Dactinomycine", "dose_lower_bound": null, "dose_upper_bound": "1.35 mg/m2", "administration_route": "IV" },
+      { "medication": "Busulfan", "dose_lower_bound": null, "dose_upper_bound": null, "administration_route": "oral" }
+    ],
+    "low": [
+      { "medication": "Asparaginase", "dose_lower_bound": null, "dose_upper_bound": null, "administration_route": null },
+      { "medication": "Pegasparaginase", "dose_lower_bound": null, "dose_upper_bound": null, "administration_route": null },
+      { "medication": "Vinblastine", "dose_lower_bound": null, "dose_upper_bound": null, "administration_route": null },
+      { "medication": "Vincristine", "dose_lower_bound": null, "dose_upper_bound": null, "administration_route": null },
+      { "medication": "Vinorelbine", "dose_lower_bound": null, "dose_upper_bound": null, "administration_route": null },
+      { "medication": "Temozolomide", "dose_lower_bound": null, "dose_upper_bound": null, "administration_route": null },
+      { "medication": "Triple IT/ITT", "dose_lower_bound": null, "dose_upper_bound": null, "administration_route": "intrathecal" },
+      { "medication": "Methotrexaat", "dose_lower_bound": null, "dose_upper_bound": "250 mg/m2", "administration_route": "IV or IT" },
+      { "medication": "ATG", "dose_lower_bound": null, "dose_upper_bound": null, "administration_route": null },
+      { "medication": "Blinatumomab", "dose_lower_bound": null, "dose_upper_bound": null, "administration_route": null },
+      { "medication": "Inotuzumab ozogamicin", "dose_lower_bound": null, "dose_upper_bound": null, "administration_route": null }
+    ]
+  },
+  "combinations": {
+    "high": [
+      {
+        "medications": [
+          { "medication": "Cyclofosfamide", "dose_lower_bound": null, "dose_upper_bound": null, "administration_route": null },
+          { "medication": "anthracycline", "dose_lower_bound": null, "dose_upper_bound": null, "administration_route": null },
+          { "medication": "etoposide", "dose_lower_bound": null, "dose_upper_bound": null, "administration_route": null }
+        ]
+      },
+      {
+        "medications": [
+          { "medication": "Cytarabine", "dose_lower_bound": null, "dose_upper_bound": null, "administration_route": null },
+          { "medication": "Daunorubicine", "dose_lower_bound": null, "dose_upper_bound": null, "administration_route": null }
+        ]
+      },
+      {
+        "medications": [
+          { "medication": "Cytarabine", "dose_lower_bound": null, "dose_upper_bound": null, "administration_route": null },
+          { "medication": "Etoposide", "dose_lower_bound": null, "dose_upper_bound": null, "administration_route": null }
+        ]
+      }
+    ]
+  }
+}
