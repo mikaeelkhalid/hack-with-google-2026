@@ -1,0 +1,64 @@
+{
+  "high": [
+    {
+      "medications": [
+        { "medication": "Cyclophosphamide", "dose_lower_bound": null, "dose_upper_bound": null, "administration_route": null },
+        { "medication": "anthracycline", "dose_lower_bound": null, "dose_upper_bound": null, "administration_route": null }
+      ]
+    },
+    {
+      "medications": [
+        { "medication": "*Cyclophosphamide", "dose_lower_bound": null, "dose_upper_bound": null, "administration_route": null },
+        { "medication": "doxorubicin", "dose_lower_bound": null, "dose_upper_bound": null, "administration_route": null }
+      ]
+    },
+    {
+      "medications": [
+        { "medication": "*Cyclophosphamide", "dose_lower_bound": null, "dose_upper_bound": null, "administration_route": null },
+        { "medication": "epirubicin", "dose_lower_bound": null, "dose_upper_bound": null, "administration_route": null }
+      ]
+    },
+    {
+      "medications": [
+        { "medication": "*Cyclophosphamide", "dose_lower_bound": null, "dose_upper_bound": null, "administration_route": null },
+        { "medication": "etoposide", "dose_lower_bound": null, "dose_upper_bound": null, "administration_route": null }
+      ]
+    },
+    {
+      "medications": [
+        { "medication": "*Cytarabine", "dose_lower_bound": "150 mg/m2", "dose_upper_bound": "200 mg/m2", "administration_route": null },
+        { "medication": "daunorubicin", "dose_lower_bound": null, "dose_upper_bound": null, "administration_route": null }
+      ]
+    },
+    {
+      "medications": [
+        { "medication": "*Cytarabine", "dose_lower_bound": "300 mg/m2", "dose_upper_bound": "300 mg/m2", "administration_route": null },
+        { "medication": "etoposide", "dose_lower_bound": null, "dose_upper_bound": null, "administration_route": null }
+      ]
+    },
+    {
+      "medications": [
+        { "medication": "*Cytarabine", "dose_lower_bound": "300 mg/m2", "dose_upper_bound": "300 mg/m2", "administration_route": null },
+        { "medication": "teniposide", "dose_lower_bound": null, "dose_upper_bound": null, "administration_route": null }
+      ]
+    },
+    {
+      "medications": [
+        { "medication": "*Doxorubicin", "dose_lower_bound": null, "dose_upper_bound": null, "administration_route": null },
+        { "medication": "ifosfamide", "dose_lower_bound": null, "dose_upper_bound": null, "administration_route": null }
+      ]
+    },
+    {
+      "medications": [
+        { "medication": "Doxorubicin", "dose_lower_bound": null, "dose_upper_bound": null, "administration_route": null },
+        { "medication": "methotrexate", "dose_lower_bound": "5 g/m2", "dose_upper_bound": "5 g/m2", "administration_route": null }
+      ]
+    },
+    {
+      "medications": [
+        { "medication": "*Etoposide", "dose_lower_bound": null, "dose_upper_bound": null, "administration_route": null },
+        { "medication": "ifosfamide", "dose_lower_bound": null, "dose_upper_bound": null, "administration_route": null }
+      ]
+    }
+  ]
+}
