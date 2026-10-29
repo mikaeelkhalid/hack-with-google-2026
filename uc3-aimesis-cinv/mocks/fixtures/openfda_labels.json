@@ -1,0 +1,71 @@
+{
+  "_fixture_note": "OpenFDA drug/label and drug/event (FAERS) response samples. The envelope shape (meta + results, openfda sub-object, patient.reaction.reactionmeddrapt, count buckets) mirrors api.fda.gov. OpenFDA is a US Government public resource. CYP statements reflect real labelling.",
+  "labels": {
+    "meta": {"disclaimer": "openFDA data are not for clinical use.", "results": {"total": 4}},
+    "results": [
+      {
+        "openfda": {
+          "generic_name": ["APREPITANT"],
+          "brand_name": ["Emend"],
+          "rxcui": ["253148"],
+          "substance_name": ["APREPITANT"]
+        },
+        "drug_interactions": [
+          "Aprepitant is a substrate, a moderate inhibitor and an inducer of CYP3A4. When aprepitant is coadministered with dexamethasone, the oral dexamethasone dose should be reduced by approximately 50%. Coadministration with strong CYP3A4 inhibitors such as ketoconazole may increase aprepitant plasma concentrations."
+        ],
+        "pediatric_use": [
+          "Safety and effectiveness have been established in pediatric patients 6 months of age and older weighing at least 6 kg."
+        ]
+      },
+      {
+        "openfda": {
+          "generic_name": ["DEXAMETHASONE"],
+          "brand_name": ["Decadron"],
+          "rxcui": ["3264"],
+          "substance_name": ["DEXAMETHASONE"]
+        },
+        "drug_interactions": [
+          "Dexamethasone is a substrate of CYP3A4 and a weak inducer of CYP3A4. Coadministration with moderate or strong CYP3A4 inhibitors increases dexamethasone exposure and may require a dose reduction."
+        ],
+        "pediatric_use": ["Use the lowest effective dose in pediatric patients."]
+      },
+      {
+        "openfda": {
+          "generic_name": ["ONDANSETRON HYDROCHLORIDE"],
+          "brand_name": ["Zofran"],
+          "rxcui": ["32499"],
+          "substance_name": ["ONDANSETRON HYDROCHLORIDE"]
+        },
+        "drug_interactions": [
+          "Ondansetron is metabolized by CYP3A4, CYP2D6 and CYP1A2. Strong inducers of CYP3A4 such as rifampicin may reduce ondansetron exposure. Coadministration with other QT-prolonging drugs increases the risk of QT interval prolongation and Torsades de Pointes."
+        ],
+        "pediatric_use": [
+          "Established in pediatric patients 6 months of age and older for prevention of chemotherapy-induced nausea and vomiting."
+        ]
+      },
+      {
+        "openfda": {
+          "generic_name": ["VORICONAZOLE"],
+          "brand_name": ["Vfend"],
+          "rxcui": ["121243"],
+          "substance_name": ["VORICONAZOLE"]
+        },
+        "drug_interactions": [
+          "Voriconazole is a strong inhibitor of CYP3A4 and a substrate of CYP2C19. Coadministration with CYP3A4 substrates may substantially increase their exposure. Voriconazole prolongs the QT interval."
+        ],
+        "pediatric_use": ["Dosing differs in children aged 2 to 12 years because of higher clearance."]
+      }
+    ]
+  },
+  "events": {
+    "meta": {"disclaimer": "Do not rely on openFDA for clinical decisions.", "last_updated": "2025-12-31"},
+    "results": [
+      {"term": "VOMITING", "count": 18422},
+      {"term": "NAUSEA", "count": 16108},
+      {"term": "QT PROLONGATION", "count": 1204},
+      {"term": "TORSADE DE POINTES", "count": 96},
+      {"term": "CONSTIPATION", "count": 3311},
+      {"term": "HEADACHE", "count": 2870}
+    ]
+  }
+}

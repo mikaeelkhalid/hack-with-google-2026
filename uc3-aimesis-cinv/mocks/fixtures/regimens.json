@@ -1,0 +1,102 @@
+{
+  "_fixture_note": "Curated paediatric chemotherapy regimen acronyms with component drugs, doses and day schedules. Day schedules matter because emetogenic risk is a per-DAY property, not a per-cycle one: a regimen can be highly emetogenic on day 1 and minimal on day 5, and prophylaxis should follow that curve. Compositions reflect published protocol definitions.",
+  "regimens": [
+    {
+      "acronym": "VIDE",
+      "full_name": "Vincristine, Ifosfamide, Doxorubicin, Etoposide",
+      "indication": "Ewing sarcoma induction",
+      "source": "EURO-EWING 99 protocol",
+      "cycle_length_days": 21,
+      "components": [
+        {"drug": "vincristine", "dose": "1.5 mg/m2", "days": [1]},
+        {"drug": "ifosfamide", "dose": "3000 mg/m2", "days": [1, 2, 3]},
+        {"drug": "doxorubicin", "dose": "20 mg/m2", "days": [1, 2, 3]},
+        {"drug": "etoposide", "dose": "150 mg/m2", "days": [1, 2, 3]}
+      ]
+    },
+    {
+      "acronym": "VAC",
+      "full_name": "Vincristine, Actinomycin-D, Cyclophosphamide",
+      "indication": "Rhabdomyosarcoma",
+      "source": "COG rhabdomyosarcoma protocols",
+      "cycle_length_days": 21,
+      "components": [
+        {"drug": "vincristine", "dose": "1.5 mg/m2", "days": [1]},
+        {"drug": "dactinomycin", "dose": "0.045 mg/kg", "days": [1]},
+        {"drug": "cyclophosphamide", "dose": "1200 mg/m2", "days": [1]}
+      ]
+    },
+    {
+      "acronym": "COJEC",
+      "full_name": "Cisplatin, Vincristine, Carboplatin, Etoposide, Cyclophosphamide",
+      "indication": "High-risk neuroblastoma rapid induction",
+      "source": "SIOPEN HR-NBL1 protocol",
+      "cycle_length_days": 10,
+      "components": [
+        {"drug": "cisplatin", "dose": "80 mg/m2", "days": [1]},
+        {"drug": "vincristine", "dose": "1.5 mg/m2", "days": [1]},
+        {"drug": "carboplatin", "dose": "750 mg/m2", "days": [1]},
+        {"drug": "etoposide", "dose": "175 mg/m2", "days": [1, 2]},
+        {"drug": "cyclophosphamide", "dose": "1050 mg/m2", "days": [1, 2]}
+      ]
+    },
+    {
+      "acronym": "ABVD",
+      "full_name": "Doxorubicin, Bleomycin, Vinblastine, Dacarbazine",
+      "indication": "Hodgkin lymphoma",
+      "source": "Standard ABVD",
+      "cycle_length_days": 28,
+      "components": [
+        {"drug": "doxorubicin", "dose": "25 mg/m2", "days": [1, 15]},
+        {"drug": "bleomycin", "dose": "10 units/m2", "days": [1, 15]},
+        {"drug": "vinblastine", "dose": "6 mg/m2", "days": [1, 15]},
+        {"drug": "dacarbazine", "dose": "375 mg/m2", "days": [1, 15]}
+      ]
+    },
+    {
+      "acronym": "FLAG-IDA",
+      "full_name": "Fludarabine, Cytarabine, G-CSF, Idarubicin",
+      "indication": "Relapsed acute myeloid leukaemia",
+      "source": "Standard FLAG-Ida",
+      "cycle_length_days": 28,
+      "components": [
+        {"drug": "fludarabine", "dose": "30 mg/m2", "days": [1, 2, 3, 4, 5]},
+        {"drug": "cytarabine", "dose": "2000 mg/m2", "days": [1, 2, 3, 4, 5]},
+        {"drug": "idarubicin", "dose": "10 mg/m2", "days": [1, 3, 5]}
+      ]
+    },
+    {
+      "acronym": "RAPID-COJEC-B4",
+      "full_name": "Vincristine + Cisplatin (HR-NBL2 RAPID COJEC Cycle B4 — Casus 1)",
+      "indication": "16yo girl with High-Risk Neuroblastoma (prior Cycle B3 Day 2 breakthrough nausea on Ondansetron 2x/d)",
+      "source": "HR-NBL2 protocol & UZA casus voorbeelden.docx (Casus 1)",
+      "cycle_length_days": 10,
+      "components": [
+        {"drug": "vincristine", "dose": "1.5 mg/m2", "days": [1]},
+        {"drug": "cisplatin", "dose": "80 mg/m2", "days": [1]}
+      ]
+    },
+    {
+      "acronym": "ALLTOGETHER-IND-B-D8",
+      "full_name": "Vincristine + Daunorubicin (ALLTogether1 Induction B Day 8 — Casus 2)",
+      "indication": "2yo boy with Acute Lymphoblastic Leukemia (ALL) — GEEN Dexamethasone",
+      "source": "ALLTogether1 protocol & UZA casus voorbeelden.docx (Casus 2)",
+      "cycle_length_days": 29,
+      "components": [
+        {"drug": "vincristine", "dose": "1.5 mg/m2", "days": [8]},
+        {"drug": "daunorubicin", "dose": "25 mg/m2", "days": [8]}
+      ]
+    },
+    {
+      "acronym": "IEUROEWING-IE",
+      "full_name": "Ifosfamide + Etoposide 5-Day Regimen (iEuroEwing IE Cycle #3 — Casus 3)",
+      "indication": "Ewing sarcoma (MEC + LEC escalates to HEC combination; prior Day 4 breakthrough nausea)",
+      "source": "iEuroEwing protocol, POGO 250111 & UZA casus voorbeelden.docx (Casus 3)",
+      "cycle_length_days": 21,
+      "components": [
+        {"drug": "ifosfamide", "dose": "1800 mg/m2", "days": [1, 2, 3, 4, 5]},
+        {"drug": "etoposide", "dose": "100 mg/m2", "days": [1, 2, 3, 4, 5]}
+      ]
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+# Dispatched Workshop Assets (`gs://swg-workshop` & `AImesis latest` Drive -> UC3)
+- **Clinical Leads**: **Katleen Balliauw & Anthe De Pauw** (Hospital Pharmacists, University Hospital Antwerp / UZA)
+- **Google Cloud CE POC**: **Payam Ebrahimi** (`@payame`)
+- **Codelab & Guide (`codelabs/`)**:
+  - `codelabs/uc3-aimesis-quickstart.lab.md` & `codelabs/index.html`
+  - `codelabs/guide.html` & `codelabs/img/`
+- **Clinical Docs, UZA Policy, POGO Guideline & Case Examples Corpus (`docs/`)**:
+  - `docs/Anti-emetica beleid CINV - V2.pdf`: Official UZA Pediatric Oncology CINV Prophylaxis & Breakthrough Policy (July 2026 v2)
+  - `docs/POGO Emetogenicity Classification Guideline Final-rev- 250111.pdf`: Official 87-page POGO Acute Emetogenic Potential Guideline (Final-rev-250111)
+  - `docs/casus voorbeelden.docx`: 3 official UZA clinical case examples (**Casus 1**: 16yo HR-NBL2 RAPID COJEC Cycle B4 with prior Day 2 breakthrough nausea; **Casus 2**: 2yo ALLTogether1 Induction B Day 8 Vincristine + Daunorubicin with strict `GEEN Dexamethasone bij ALL`; **Casus 3**: iEuroEwing 5-day `IE` Cycle #3 Ifosfamide + Etoposide escalating to HEC with Day 4 breakthrough nausea)
+  - `docs/user stories AImesis version 2.pdf`: 6 official clinical user stories (Stories 1–6)
+  - `docs/AImesis_pediatric CINVcontrol clinical decision support .pptx`: Updated 9-slide clinical briefing deck (Katleen Balliauw & Anthe De Pauw, UZA — includes Companion App nausea tracking bonus challenge)
+  - `docs/Pitch slides AImesis versie 2 .pptx`: Main-stage pitch slide (`Every child with cancer deserves comfort!`)
+  - `docs/CINV resources in Belgium.xlsx`: Curated Belgian pediatric oncology family resources (`UZ Gent`, `UZ Leuven`, `UZA`, `HUDERF`, `Stichting tegen Kanker`)
+- **Mocks & Fixtures (`mocks/`)**:
+  - `mocks/fixtures/` & `mocks/data_products/`: UC3 fixtures (including `RAPID-COJEC-B4`, `ALLTOGETHER-IND-B-D8`, `IEUROEWING-IE`) and data products

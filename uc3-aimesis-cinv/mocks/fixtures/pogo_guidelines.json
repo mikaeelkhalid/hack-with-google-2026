@@ -1,0 +1,23 @@
+{
+  "_fixture_note": "Abridged POGO / MASCC-ESMO / ASCO paediatric antiemetic guidance. Emetogenicity tiers follow the standard thresholds (High >90%, Moderate 30-90%, Low 10-30%, Minimal <10% frequency of emesis without prophylaxis). Drug classifications reflect published paediatric emetogenicity tables. Guidelines are published openly by the issuing bodies for clinical use.",
+  "guidelines": [
+    {
+      "guideline_id": "POGO-CINV-2024",
+      "title": "POGO Guideline for the Prevention of Acute Chemotherapy-Induced Nausea and Vomiting in Children",
+      "issuer": "Pediatric Oncology Group of Ontario",
+      "url": "https://www.pogo.ca/guidelines/antiemetic/",
+      "version": "2024.1",
+      "date_published": "2024-09-15",
+      "body_markdown": "# Prevention of Acute CINV in Children\n\n## Emetogenicity Classification\n\nEmetogenicity is defined by the frequency of emesis in the absence of antiemetic prophylaxis.\n\n| Level | Frequency of emesis | Examples |\n| --- | --- | --- |\n| High | >90% | cisplatin, cyclophosphamide >=1000 mg/m2, dacarbazine, high-dose methotrexate >=12000 mg/m2 |\n| Moderate | 30-90% | carboplatin, cytarabine >200 mg/m2, doxorubicin, ifosfamide, daunorubicin |\n| Low | 10-30% | etoposide, low-dose methotrexate, gemcitabine, topotecan |\n| Minimal | <10% | vincristine, vinblastine, bleomycin, fludarabine |\n\n## Recommended Prophylaxis by Emetogenicity\n\n### High Emetogenic Risk\n\nChildren receiving highly emetogenic chemotherapy should receive a 5-HT3 antagonist plus dexamethasone plus aprepitant where age-appropriate.\n\n| Age group | Regimen |\n| --- | --- |\n| >=12 years | Ondansetron + dexamethasone + aprepitant |\n| 6 months to <12 years | Ondansetron + dexamethasone; add aprepitant from 6 months where licensed |\n| <6 months | Ondansetron alone; dexamethasone with caution |\n\n### Moderate Emetogenic Risk\n\nA 5-HT3 antagonist plus dexamethasone is recommended.\n\n### Low Emetogenic Risk\n\nA 5-HT3 antagonist alone is recommended.\n\n### Minimal Emetogenic Risk\n\nNo routine prophylaxis is required.\n\n## Combination Regimens\n\nWhen a regimen contains multiple agents, the emetogenicity of the combination is determined by the most emetogenic agent. Where two or more moderately emetogenic agents are combined, the regimen should be treated as one level higher.\n\n## Aprepitant and Dexamethasone\n\nAprepitant is a moderate inhibitor of CYP3A4 and increases dexamethasone exposure substantially. When aprepitant is co-administered, the dexamethasone dose should be reduced by approximately 50 percent.\n\n## Safety Considerations\n\n5-HT3 antagonists prolong the QT interval in a dose-dependent manner. Caution is advised when combining them with other QT-prolonging agents, particularly azole antifungals used for prophylaxis in neutropenic children."
+    },
+    {
+      "guideline_id": "MASCC-ESMO-2023-PED",
+      "title": "MASCC/ESMO Antiemetic Guideline - Paediatric Section",
+      "issuer": "MASCC/ESMO",
+      "url": "https://www.mascc.org/antiemetic-guidelines",
+      "version": "2023",
+      "date_published": "2023-06-01",
+      "body_markdown": "# MASCC/ESMO Paediatric Antiemetic Recommendations\n\n## Acute Phase Prophylaxis\n\nGranisetron or ondansetron are both acceptable 5-HT3 antagonists in children.\n\n## Delayed Phase\n\nFor highly emetogenic chemotherapy, prophylaxis should continue for at least 3 days after the last dose of chemotherapy.\n\n## Age Restrictions\n\nAprepitant is approved in children from 6 months of age and weighing at least 6 kg. Below this, no NK1 antagonist is recommended.\n\n## Dexamethasone Cautions\n\nDexamethasone should be avoided where it may interfere with the antitumour regimen, notably in acute lymphoblastic leukaemia and lymphoma protocols where corticosteroids form part of the therapy itself."
+    }
+  ]
+}

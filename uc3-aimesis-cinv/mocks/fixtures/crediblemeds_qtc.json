@@ -1,0 +1,26 @@
+{
+  "_fixture_note": "SYNTHETIC DEMONSTRATION DATA -- NOT REDISTRIBUTED CREDIBLEMEDS CONTENT. CredibleMeds/QTdrugs is licensed and its lists are NOT freely redistributable, so no real extract is vendored in this repository. This fixture is hand-authored for offline demonstration using the CredibleMeds RISK CATEGORY VOCABULARY (Known Risk of TdP, Possible Risk of TdP, Conditional Risk of TdP, Drugs to Avoid in Congenital Long QT), which is public, and drug assignments that are widely documented in regulatory labelling. In production the connector fetches from CredibleMeds under an appropriate licence and this file is never used. Treat every entry here as illustrative only.",
+  "_licence_warning": "Do not replace this file with a real CredibleMeds extract. Fetch at runtime instead.",
+  "risk_categories": {
+    "known": "Known Risk of Torsades de Pointes",
+    "possible": "Possible Risk of Torsades de Pointes",
+    "conditional": "Conditional Risk of Torsades de Pointes",
+    "avoid_clqts": "Drugs to Avoid in Congenital Long QT Syndrome"
+  },
+  "drugs": [
+    {"drug": "ondansetron", "risk_category": "known", "route_note": "Risk is dose-dependent and greater with intravenous administration; single IV doses above 16 mg are no longer recommended."},
+    {"drug": "droperidol", "risk_category": "known", "route_note": "Carries a boxed warning for QT prolongation and Torsades de Pointes."},
+    {"drug": "haloperidol", "risk_category": "known", "route_note": "Risk greatest with intravenous use and at higher doses."},
+    {"drug": "granisetron", "risk_category": "possible", "route_note": "Less QT effect than ondansetron but not free of risk."},
+    {"drug": "domperidone", "risk_category": "known", "route_note": "Restricted in the EU because of cardiac risk; avoid in children where alternatives exist."},
+    {"drug": "voriconazole", "risk_category": "known", "route_note": "Azole antifungal used for prophylaxis in neutropenic children."},
+    {"drug": "posaconazole", "risk_category": "possible", "route_note": "Azole antifungal; QT effect reported."},
+    {"drug": "fluconazole", "risk_category": "conditional", "route_note": "Risk emerges with high dose, electrolyte disturbance or co-administered QT-prolonging drugs."},
+    {"drug": "metoclopramide", "risk_category": "conditional", "route_note": "Conditional risk; also carries extrapyramidal risk in children."},
+    {"drug": "amiodarone", "risk_category": "known", "route_note": "Classic QT-prolonging antiarrhythmic."},
+    {"drug": "erythromycin", "risk_category": "known", "route_note": "Macrolide; risk increased with hepatic impairment."},
+    {"drug": "azithromycin", "risk_category": "possible", "route_note": "Lower risk than erythromycin but documented."},
+    {"drug": "chlorpromazine", "risk_category": "possible", "route_note": "Phenothiazine antiemetic."},
+    {"drug": "aprepitant", "risk_category": "conditional", "route_note": "No direct QT signal; listed conditionally because CYP3A4 inhibition can raise exposure of co-administered QT-prolonging substrates."}
+  ]
+}
