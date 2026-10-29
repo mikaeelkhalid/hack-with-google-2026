@@ -114,8 +114,9 @@ app.router.routes = [r for r in app.router.routes if getattr(r, "path", None) !=
 
 
 @app.get("/", include_in_schema=False)
+@app.get("/ui", include_in_schema=False)
 async def root_redirect() -> RedirectResponse:
-    return RedirectResponse(url="/ui")
+    return RedirectResponse(url="/ui/")
 
 
 @app.websocket("/ui/_stcore/stream")
@@ -170,19 +171,12 @@ async def proxy_streamlit_ws(websocket: WebSocket) -> None:
 
 
 @app.api_route(
-    "/ui",
-    methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD", "PATCH"],
-    include_in_schema=False,
-)
-@app.api_route(
     "/ui/{path:path}",
     methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD", "PATCH"],
     include_in_schema=False,
 )
 async def proxy_streamlit_http(request: Request, path: str = "") -> Response:
-    target_url = f"{STREAMLIT_HTTP_BASE}/ui/{path}".rstrip("/")
-    if not path:
-        target_url = f"{STREAMLIT_HTTP_BASE}/ui"
+    target_url = f"{STREAMLIT_HTTP_BASE}/ui/{path}"
     if request.url.query:
         target_url = f"{target_url}?{request.url.query}"
 
