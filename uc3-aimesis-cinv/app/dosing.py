@@ -143,6 +143,19 @@ def compute_antiemetic_doses(
             for r in DOSE_RULES
             if r["drug"] == drug_key and r["route"] == norm_route and usable(r)
         ]
+        eff_route = norm_route
+        if not rules:
+            # If the requested route has no rule for an exclusively PO/IV agent (e.g. PO olanzapine/aprepitant
+            # alongside IV ondansetron), fall back to the drug's usable route so all agents dose in one call.
+            fallback_route = "PO" if norm_route == "IV" else "IV"
+            rules = [
+                r
+                for r in DOSE_RULES
+                if r["drug"] == drug_key and r["route"] == fallback_route and usable(r)
+            ]
+            if rules:
+                eff_route = fallback_route
+
         if not rules:
             needs_review = True
             out.append(
@@ -180,14 +193,16 @@ def compute_antiemetic_doses(
 
             item: dict[str, Any] = {
                 "drug": drug,
-                "route": norm_route,
+                "route": eff_route,
                 "days": r["days"],
                 "dose_mg": round(dose, 2) if r.get("round_down_mg") else round(dose, 1),
+                "max_mg": r.get("max_mg"),
+                "round_down_mg": r.get("round_down_mg"),
                 "capped": capped,
                 "source": r["source"],
             }
 
-            if drug_key == "dexamethasone" and norm_route == "IV":
+            if drug_key == "dexamethasone" and eff_route == "IV":
                 item["aacidexam_note"] = (
                     "UZA Aacidexam® IV Alert: 5 mg/mL ampoule = ±4 mg/mL active dexamethasone base."
                 )
@@ -197,7 +212,7 @@ def compute_antiemetic_doses(
                     f_row
                     for f_row in FORMULATIONS
                     if f_row["drug"] == drug_key
-                    and f_row["route"] == norm_route
+                    and f_row["route"] == eff_route
                     and usable(f_row)
                 ),
                 None,
@@ -231,5 +246,18 @@ def compute_antiemetic_doses(
         "advisory_status": ADVISORY_LABEL,
     }
     if tool_context is not None and hasattr(tool_context, "state"):
-        tool_context.state["facts_doses"] = res
+        prev = tool_context.state.get("facts_doses")
+        if isinstance(prev, dict) and prev.get("bsa_m2") == bsa:
+            new_keys = {(d.get("drug"), d.get("days")) for d in out}
+            merged_doses = [
+                d
+                for d in (prev.get("doses") or [])
+                if (d.get("drug"), d.get("days")) not in new_keys
+                and d.get("dose_mg") is not None
+            ] + out
+            merged_res = dict(res)
+            merged_res["doses"] = merged_doses
+            tool_context.state["facts_doses"] = merged_res
+        else:
+            tool_context.state["facts_doses"] = res
     return res

@@ -20,7 +20,8 @@ from google.genai import types
 from app.tables import ADVISORY_LABEL
 
 _DOSE_VOL_RE = re.compile(r"\b(\d+(?:\.\d+)?)\s*(mg|ml)\b(?!\s*/)", re.IGNORECASE)
-_CITATION_RE = re.compile(r"\[(S\d+)\]")
+_BRACKET_CITE_RE = re.compile(r"\[([^\]]*?\bS\d+\b[^\]]*?)\]")
+_S_ID_RE = re.compile(r"\b(S\d+)\b")
 
 
 def _allowed_numbers(state: dict[str, Any]) -> tuple[bool, set[float], set[float]]:
@@ -31,12 +32,10 @@ def _allowed_numbers(state: dict[str, Any]) -> tuple[bool, set[float], set[float
 
     facts_doses = state.get("facts_doses") or {}
     for row in facts_doses.get("doses") or []:
-        if row.get("dose_mg") is not None:
-            allowed_mg.add(round(float(row["dose_mg"]), 2))
-            allowed_mg.add(round(float(row["dose_mg"]), 1))
-        if row.get("actual_dose_mg") is not None:
-            allowed_mg.add(round(float(row["actual_dose_mg"]), 2))
-            allowed_mg.add(round(float(row["actual_dose_mg"]), 1))
+        for key in ("dose_mg", "actual_dose_mg", "max_mg", "round_down_mg"):
+            if row.get(key) is not None:
+                allowed_mg.add(round(float(row[key]), 2))
+                allowed_mg.add(round(float(row[key]), 1))
         if row.get("volume_ml") is not None:
             allowed_ml.add(round(float(row["volume_ml"]), 2))
             allowed_ml.add(round(float(row["volume_ml"]), 1))
@@ -76,10 +75,10 @@ def _sentence_has_unsupported_value(
             if round(val, 2) not in target_set and round(val, 1) not in target_set:
                 return True
 
-    for cite_match in _CITATION_RE.finditer(sentence):
-        cite_id = cite_match.group(1)
-        if not has_evidence or cite_id not in allowed_cites:
-            return True
+    for bracket_match in _BRACKET_CITE_RE.finditer(sentence):
+        for cite_id in _S_ID_RE.findall(bracket_match.group(1)):
+            if not has_evidence or cite_id not in allowed_cites:
+                return True
 
     return False
 
@@ -111,27 +110,34 @@ def guard(
     has_dose_facts, allowed_mg, allowed_ml = _allowed_numbers(state)
     has_evidence, allowed_cites = _allowed_citations(state)
 
-    # Split into sentences/lines and check each for unsupported values
-    sentences = re.split(r"(?<=[.!?])\s+|\n+", full_text)
-    kept_sentences: list[str] = []
+    # Preserve Markdown line breaks and tables while checking sentences on each line
+    kept_lines: list[str] = []
     removed_any = False
 
-    for sent in sentences:
-        if not sent.strip():
+    for line in full_text.splitlines():
+        if not line.strip():
+            kept_lines.append("")
             continue
-        if _sentence_has_unsupported_value(
-            sent, has_dose_facts, allowed_mg, allowed_ml, has_evidence, allowed_cites
-        ):
-            removed_any = True
-        else:
-            kept_sentences.append(sent)
+        sentences = re.split(r"(?<=[.!?])\s+", line)
+        line_kept: list[str] = []
+        for sent in sentences:
+            if not sent.strip():
+                continue
+            if _sentence_has_unsupported_value(
+                sent, has_dose_facts, allowed_mg, allowed_ml, has_evidence, allowed_cites
+            ):
+                removed_any = True
+            else:
+                line_kept.append(sent)
+        if line_kept:
+            kept_lines.append(" ".join(line_kept))
 
     missing_label = ADVISORY_LABEL not in full_text
 
     if not removed_any and not missing_label:
         return None
 
-    new_body = " ".join(kept_sentences).strip()
+    new_body = "\n".join(kept_lines).strip()
     if removed_any:
         new_body = (
             f"Guardrail: unsupported values removed\n\n{new_body}"
