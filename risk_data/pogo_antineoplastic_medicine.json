@@ -1,0 +1,177 @@
+{
+  "single": {
+    "high": [
+      { "medication": "Altretamine", "dose_lower_bound": null, "dose_upper_bound": null, "administration_route": null },
+      { "medication": "*Carboplatin", "dose_lower_bound": null, "dose_upper_bound": null, "administration_route": null },
+      { "medication": "Carmustine", "dose_lower_bound": "250 mg/m2", "dose_upper_bound": null, "administration_route": null },
+      { "medication": "*Cisplatin", "dose_lower_bound": null, "dose_upper_bound": null, "administration_route": null },
+      { "medication": "*Cyclophosphamide", "dose_lower_bound": "1 g/m2", "dose_upper_bound": null, "administration_route": null },
+      { "medication": "*Cytarabine", "dose_lower_bound": "3 g/m2/dose", "dose_upper_bound": "3 g/m2/dose", "administration_route": null },
+      { "medication": "Dacarbazine", "dose_lower_bound": null, "dose_upper_bound": null, "administration_route": null },
+      { "medication": "*Dactinomycin", "dose_lower_bound": null, "dose_upper_bound": null, "administration_route": null },
+      { "medication": "Mechlorethamine", "dose_lower_bound": null, "dose_upper_bound": null, "administration_route": null },
+      { "medication": "*Methotrexate", "dose_lower_bound": "12 g/m2", "dose_upper_bound": null, "administration_route": null },
+      { "medication": "Procarbazine", "dose_lower_bound": null, "dose_upper_bound": null, "administration_route": "oral" },
+      { "medication": "Streptozocin", "dose_lower_bound": null, "dose_upper_bound": null, "administration_route": null },
+      { "medication": "*Thiotepa", "dose_lower_bound": "300 mg/m2", "dose_upper_bound": null, "administration_route": null }
+    ],
+    "moderate": [
+      { "medication": "Aldesleukin", "dose_lower_bound": "12 million units/m2", "dose_upper_bound": "15 million units/m2", "administration_route": null },
+      { "medication": "Amifostine", "dose_lower_bound": "300 mg/m2", "dose_upper_bound": null, "administration_route": null },
+      { "medication": "Arsenic trioxide", "dose_lower_bound": null, "dose_upper_bound": null, "administration_route": null },
+      { "medication": "Azacitidine", "dose_lower_bound": null, "dose_upper_bound": null, "administration_route": null },
+      { "medication": "Bendamustine", "dose_lower_bound": null, "dose_upper_bound": null, "administration_route": null },
+      { "medication": "Busulfan", "dose_lower_bound": null, "dose_upper_bound": null, "administration_route": null },
+      { "medication": "*Carmustine", "dose_lower_bound": null, "dose_upper_bound": "250 mg/m2", "administration_route": null },
+      { "medication": "*Clofarabine", "dose_lower_bound": null, "dose_upper_bound": null, "administration_route": null },
+      { "medication": "*Cyclophosphamide", "dose_lower_bound": null, "dose_upper_bound": "1 g/m2", "administration_route": null },
+      { "medication": "Cyclophosphamide", "dose_lower_bound": null, "dose_upper_bound": null, "administration_route": "oral" },
+      { "medication": "Cytarabine", "dose_lower_bound": "200 mg/m2", "dose_upper_bound": "3 g/m2", "administration_route": null },
+      { "medication": "*Daunorubicin", "dose_lower_bound": null, "dose_upper_bound": null, "administration_route": null },
+      { "medication": "*Doxorubicin", "dose_lower_bound": null, "dose_upper_bound": null, "administration_route": null },
+      { "medication": "Epirubicin", "dose_lower_bound": null, "dose_upper_bound": null, "administration_route": null },
+      { "medication": "Etoposide", "dose_lower_bound": null, "dose_upper_bound": null, "administration_route": "oral" },
+      { "medication": "Idarubicin", "dose_lower_bound": null, "dose_upper_bound": null, "administration_route": null },
+      { "medication": "Ifosfamide", "dose_lower_bound": null, "dose_upper_bound": null, "administration_route": null },
+      { "medication": "Imatinib", "dose_lower_bound": null, "dose_upper_bound": null, "administration_route": "oral" },
+      { "medication": "*Intrathecal therapy (methotrexate, hydrocortisone & cytarabine)", "dose_lower_bound": null, "dose_upper_bound": null, "administration_route": "intrathecal" },
+      { "medication": "Irinotecan", "dose_lower_bound": null, "dose_upper_bound": null, "administration_route": null },
+      { "medication": "Lomustine", "dose_lower_bound": null, "dose_upper_bound": null, "administration_route": null },
+      { "medication": "Melphalan", "dose_lower_bound": "50 mg/m2", "dose_upper_bound": null, "administration_route": null },
+      { "medication": "Methotrexate", "dose_lower_bound": "250 mg", "dose_upper_bound": "12 g/m2", "administration_route": null },
+      { "medication": "Oxaliplatin", "dose_lower_bound": "75 mg/m2", "dose_upper_bound": null, "administration_route": null },
+      { "medication": "Temozolomide", "dose_lower_bound": null, "dose_upper_bound": null, "administration_route": "oral" },
+      { "medication": "Vinorelbine", "dose_lower_bound": null, "dose_upper_bound": null, "administration_route": "oral" }
+    ],
+    "low": [
+      { "medication": "Amifostine", "dose_lower_bound": null, "dose_upper_bound": "300 mg/m2", "administration_route": null },
+      { "medication": "Amsacrine", "dose_lower_bound": null, "dose_upper_bound": null, "administration_route": null },
+      { "medication": "Bexarotene", "dose_lower_bound": null, "dose_upper_bound": null, "administration_route": null },
+      { "medication": "*Busulfan", "dose_lower_bound": null, "dose_upper_bound": null, "administration_route": "oral" },
+      { "medication": "Capecitabine", "dose_lower_bound": null, "dose_upper_bound": null, "administration_route": null },
+      { "medication": "Cytarabine", "dose_lower_bound": null, "dose_upper_bound": "200 mg/m2", "administration_route": null },
+      { "medication": "Docetaxel", "dose_lower_bound": null, "dose_upper_bound": null, "administration_route": null },
+      { "medication": "Doxorubicin", "dose_lower_bound": null, "dose_upper_bound": null, "administration_route": "liposomal" },
+      { "medication": "Etoposide", "dose_lower_bound": null, "dose_upper_bound": null, "administration_route": null },
+      { "medication": "Fludarabine", "dose_lower_bound": null, "dose_upper_bound": null, "administration_route": "oral" },
+      { "medication": "5-Fluorouracil", "dose_lower_bound": null, "dose_upper_bound": null, "administration_route": null },
+      { "medication": "Gemcitabine", "dose_lower_bound": null, "dose_upper_bound": null, "administration_route": null },
+      { "medication": "Ixabepilone", "dose_lower_bound": null, "dose_upper_bound": null, "administration_route": null },
+      { "medication": "Methotrexate", "dose_lower_bound": "50 mg/m2", "dose_upper_bound": "250 mg/m2", "administration_route": null },
+      { "medication": "Mitomycin", "dose_lower_bound": null, "dose_upper_bound": null, "administration_route": null },
+      { "medication": "Mitoxantrone", "dose_lower_bound": null, "dose_upper_bound": null, "administration_route": null },
+      { "medication": "Nilotinib", "dose_lower_bound": null, "dose_upper_bound": null, "administration_route": null },
+      { "medication": "Paclitaxel", "dose_lower_bound": null, "dose_upper_bound": null, "administration_route": null },
+      { "medication": "Paclitaxel-albumin", "dose_lower_bound": null, "dose_upper_bound": null, "administration_route": null },
+      { "medication": "Pemetrexed", "dose_lower_bound": null, "dose_upper_bound": null, "administration_route": null },
+      { "medication": "Teniposide", "dose_lower_bound": null, "dose_upper_bound": null, "administration_route": null },
+      { "medication": "Thiotepa", "dose_lower_bound": null, "dose_upper_bound": "300 mg/m2", "administration_route": null },
+      { "medication": "Topotecan", "dose_lower_bound": null, "dose_upper_bound": null, "administration_route": null },
+      { "medication": "Vorinostat", "dose_lower_bound": null, "dose_upper_bound": null, "administration_route": null }
+    ],
+    "minimal": [
+      { "medication": "Alemtuzumab", "dose_lower_bound": null, "dose_upper_bound": null, "administration_route": null },
+      { "medication": "Alpha interferon", "dose_lower_bound": null, "dose_upper_bound": null, "administration_route": null },
+      { "medication": "Asparaginase", "dose_lower_bound": null, "dose_upper_bound": null, "administration_route": "IM or IV" },
+      { "medication": "Bevacizumab", "dose_lower_bound": null, "dose_upper_bound": null, "administration_route": null },
+      { "medication": "Bleomycin", "dose_lower_bound": null, "dose_upper_bound": null, "administration_route": null },
+      { "medication": "Bortezomib", "dose_lower_bound": null, "dose_upper_bound": null, "administration_route": null },
+      { "medication": "Cetuximab", "dose_lower_bound": null, "dose_upper_bound": null, "administration_route": null },
+      { "medication": "Chlorambucil", "dose_lower_bound": null, "dose_upper_bound": null, "administration_route": "oral" },
+      { "medication": "Cladribine (2-chlorodeoxyadenosine)", "dose_lower_bound": null, "dose_upper_bound": null, "administration_route": null },
+      { "medication": "Decitabine", "dose_lower_bound": null, "dose_upper_bound": null, "administration_route": null },
+      { "medication": "Denileukin diftitox", "dose_lower_bound": null, "dose_upper_bound": null, "administration_route": null },
+      { "medication": "Dasatinib", "dose_lower_bound": null, "dose_upper_bound": null, "administration_route": null },
+      { "medication": "Dexrazoxane", "dose_lower_bound": null, "dose_upper_bound": null, "administration_route": null },
+      { "medication": "Erlotinib", "dose_lower_bound": null, "dose_upper_bound": null, "administration_route": null },
+      { "medication": "Fludarabine", "dose_lower_bound": null, "dose_upper_bound": null, "administration_route": null },
+      { "medication": "Gefitinib", "dose_lower_bound": null, "dose_upper_bound": null, "administration_route": null },
+      { "medication": "Gemtuzumab ozogamicin", "dose_lower_bound": null, "dose_upper_bound": null, "administration_route": null },
+      { "medication": "Hydroxyurea", "dose_lower_bound": null, "dose_upper_bound": null, "administration_route": "oral" },
+      { "medication": "Lapatinib", "dose_lower_bound": null, "dose_upper_bound": null, "administration_route": null },
+      { "medication": "Lenalidomide", "dose_lower_bound": null, "dose_upper_bound": null, "administration_route": null },
+      { "medication": "Melphalan", "dose_lower_bound": null, "dose_upper_bound": null, "administration_route": "oral (low-dose)" },
+      { "medication": "Mercaptopurine", "dose_lower_bound": null, "dose_upper_bound": null, "administration_route": "oral" },
+      { "medication": "Methotrexate", "dose_lower_bound": null, "dose_upper_bound": "50 mg/m2", "administration_route": null },
+      { "medication": "Nelarabine", "dose_lower_bound": null, "dose_upper_bound": null, "administration_route": null },
+      { "medication": "Panitumumab", "dose_lower_bound": null, "dose_upper_bound": null, "administration_route": null },
+      { "medication": "Pentostatin", "dose_lower_bound": null, "dose_upper_bound": null, "administration_route": null },
+      { "medication": "Rituximab", "dose_lower_bound": null, "dose_upper_bound": null, "administration_route": null },
+      { "medication": "Sorafenib", "dose_lower_bound": null, "dose_upper_bound": null, "administration_route": null },
+      { "medication": "Sunitinib", "dose_lower_bound": null, "dose_upper_bound": null, "administration_route": null },
+      { "medication": "Temsirolimus", "dose_lower_bound": null, "dose_upper_bound": null, "administration_route": null },
+      { "medication": "Thalidomide", "dose_lower_bound": null, "dose_upper_bound": null, "administration_route": null },
+      { "medication": "Thioguanine", "dose_lower_bound": null, "dose_upper_bound": null, "administration_route": "oral" },
+      { "medication": "Trastuzumab", "dose_lower_bound": null, "dose_upper_bound": null, "administration_route": null },
+      { "medication": "Valrubicin", "dose_lower_bound": null, "dose_upper_bound": null, "administration_route": null },
+      { "medication": "Vinblastine", "dose_lower_bound": null, "dose_upper_bound": null, "administration_route": null },
+      { "medication": "Vincristine", "dose_lower_bound": null, "dose_upper_bound": null, "administration_route": null },
+      { "medication": "Vindesine", "dose_lower_bound": null, "dose_upper_bound": null, "administration_route": null },
+      { "medication": "Vinorelbine", "dose_lower_bound": null, "dose_upper_bound": null, "administration_route": null }
+    ]
+  },
+  "combinations": {
+    "high": [
+      {
+        "medications": [
+          { "medication": "Cyclophosphamide", "dose_lower_bound": null, "dose_upper_bound": null, "administration_route": null },
+          { "medication": "anthracycline", "dose_lower_bound": null, "dose_upper_bound": null, "administration_route": null }
+        ]
+      },
+      {
+        "medications": [
+          { "medication": "*Cyclophosphamide", "dose_lower_bound": null, "dose_upper_bound": null, "administration_route": null },
+          { "medication": "doxorubicin", "dose_lower_bound": null, "dose_upper_bound": null, "administration_route": null }
+        ]
+      },
+      {
+        "medications": [
+          { "medication": "*Cyclophosphamide", "dose_lower_bound": null, "dose_upper_bound": null, "administration_route": null },
+          { "medication": "epirubicin", "dose_lower_bound": null, "dose_upper_bound": null, "administration_route": null }
+        ]
+      },
+      {
+        "medications": [
+          { "medication": "*Cyclophosphamide", "dose_lower_bound": null, "dose_upper_bound": null, "administration_route": null },
+          { "medication": "etoposide", "dose_lower_bound": null, "dose_upper_bound": null, "administration_route": null }
+        ]
+      },
+      {
+        "medications": [
+          { "medication": "*Cytarabine", "dose_lower_bound": "150 mg/m2", "dose_upper_bound": "200 mg/m2", "administration_route": null },
+          { "medication": "daunorubicin", "dose_lower_bound": null, "dose_upper_bound": null, "administration_route": null }
+        ]
+      },
+      {
+        "medications": [
+          { "medication": "*Cytarabine", "dose_lower_bound": "300 mg/m2", "dose_upper_bound": "300 mg/m2", "administration_route": null },
+          { "medication": "etoposide", "dose_lower_bound": null, "dose_upper_bound": null, "administration_route": null }
+        ]
+      },
+      {
+        "medications": [
+          { "medication": "*Cytarabine", "dose_lower_bound": "300 mg/m2", "dose_upper_bound": "300 mg/m2", "administration_route": null },
+          { "medication": "teniposide", "dose_lower_bound": null, "dose_upper_bound": null, "administration_route": null }
+        ]
+      },
+      {
+        "medications": [
+          { "medication": "*Doxorubicin", "dose_lower_bound": null, "dose_upper_bound": null, "administration_route": null },
+          { "medication": "ifosfamide", "dose_lower_bound": null, "dose_upper_bound": null, "administration_route": null }
+        ]
+      },
+      {
+        "medications": [
+          { "medication": "Doxorubicin", "dose_lower_bound": null, "dose_upper_bound": null, "administration_route": null },
+          { "medication": "methotrexate", "dose_lower_bound": "5 g/m2", "dose_upper_bound": "5 g/m2", "administration_route": null }
+        ]
+      },
+      {
+        "medications": [
+          { "medication": "*Etoposide", "dose_lower_bound": null, "dose_upper_bound": null, "administration_route": null },
+          { "medication": "ifosfamide", "dose_lower_bound": null, "dose_upper_bound": null, "administration_route": null }
+        ]
+      }
+    ]
+  }
+}

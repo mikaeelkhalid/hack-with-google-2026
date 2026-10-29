@@ -49,6 +49,14 @@ The algorithm, in plain if/then terms:
    - If none of the medications are recognized at all, return None rather
      than guessing.
 
+4. Steps 1-3 are run twice: once against the POGO data, once against the
+   UZA data (UZA only lists agents/combinations where it differs from POGO,
+   or that POGO lacks entirely). The two results are then merged: if UZA has
+   nothing to say, POGO's result is returned alone tagged "POGO"; if POGO has
+   nothing to say, UZA's result is returned alone tagged "UZA"; if both agree,
+   POGO's result is returned alone; if they disagree, both are returned,
+   tagged "POGO" and "UZA" respectively.
+
 Every fallback and every interpreted dose/route/classification is logged
 (warnings for ambiguous fallbacks, info for normal interpretation), so the
 reasoning behind a result is never silent.
@@ -64,8 +72,8 @@ logger = logging.getLogger(__name__)
 
 CLASSIFICATION_ORDER = ["minimal", "low", "moderate", "high"]
 
-JSON_PATH = Path(__file__).parent / "risk_data" / "pogo_single_antineoplastic_medicine.json"
-MULTI_JSON_PATH = Path(__file__).parent / "risk_data" / "pogo_multi_antineoplastic_medicine.json"
+POGO_JSON_PATH = Path(__file__).parent / "risk_data" / "pogo_antineoplastic_medicine.json"
+UZA_JSON_PATH = Path(__file__).parent / "risk_data" / "uza_antineoplastic_medicine_diff.json"
 
 # Matches doses like "250mg", "1g/m2", "3g/m2/dose" after `_normalize_dose`.
 DOSE_PATTERN = re.compile(r"^(?P<value>\d+(?:\.\d+)?)(?P<unit>mg|g)(?P<per_m2>/m2)?(?:/dose)?$")
@@ -216,11 +224,23 @@ def _med_fields(med: dict) -> tuple[Optional[str], Optional[str], Optional[str]]
     )
 
 
+def _load_section(json_path: Path, section: str) -> dict:
+    """Load `json_path` and return its `section` sub-dict.
+
+    Falls back to the whole file when there's no such wrapping key, so
+    already-flat files (e.g. the UZA override datasets) still work unchanged.
+    """
+    with open(json_path, "r") as f:
+        data = json.load(f)
+    return data.get(section, data)
+
+
 def classify_medication(
     medication: str,
     dose: Optional[str] = None,
     administration_route: Optional[str] = None,
-    json_path: Path = JSON_PATH,
+    json_path: Path = POGO_JSON_PATH,
+    quiet: bool = False,
 ) -> Optional[str]:
     """Look up a single medication's emetogenicity classification.
 
@@ -228,10 +248,11 @@ def classify_medication(
     Dose and administration_route are optional and used as tie-breakers when
     a medication has multiple entries with different dose/route bounds. Every
     fallback (unrecognized medication, ambiguous dose/route) is logged as a
-    warning, and the final interpretation is always logged as info.
+    warning, and the final interpretation is always logged as info. Pass
+    quiet=True to downgrade the "not found" warning to debug level, for
+    sources (like a sparse override dataset) where that's an expected outcome.
     """
-    with open(json_path, "r") as f:
-        data = json.load(f)
+    data = _load_section(json_path, "single")
 
     med_name = _normalize(medication)
     dose_norm = _normalize_dose(dose)
@@ -245,7 +266,7 @@ def classify_medication(
     ]
 
     if not matches:
-        logger.warning(
+        (logger.debug if quiet else logger.warning)(
             "Medication '%s' not found in %s; returning no classification.",
             medication, json_path.name,
         )
@@ -318,7 +339,7 @@ def _combo_entry_matches(medications: list[dict], combo_medications: list[dict])
 
 def classify_combination(
     medications: list[dict],
-    json_path: Path = MULTI_JSON_PATH,
+    json_path: Path = POGO_JSON_PATH,
 ) -> Optional[str]:
     """Look up a regimen's classification in the multi-medication combination table.
 
@@ -328,8 +349,7 @@ def classify_combination(
     allowed. If multiple combination entries match (e.g. two different risky
     pairs within a larger regimen), the highest-risk one is returned.
     """
-    with open(json_path, "r") as f:
-        data = json.load(f)
+    data = _load_section(json_path, "combinations")
 
     matches = [
         classification
@@ -349,7 +369,9 @@ def classify_combination(
     return result
 
 
-def _highest_single_classification(medications: list[dict], json_path: Path) -> Optional[str]:
+def _highest_single_classification(
+    medications: list[dict], json_path: Path, quiet: bool = False
+) -> Optional[str]:
     """Classify each medication individually and return the highest-risk result.
 
     Used when no multi-drug combination matches the regimen.
@@ -357,11 +379,11 @@ def _highest_single_classification(medications: list[dict], json_path: Path) -> 
     per_drug = []
     for med in medications:
         name, dose, route = _med_fields(med)
-        per_drug.append((name, classify_medication(name, dose, route, json_path)))
+        per_drug.append((name, classify_medication(name, dose, route, json_path, quiet=quiet)))
 
     known = [c for _, c in per_drug if c is not None]
     if not known:
-        logger.warning(
+        (logger.debug if quiet else logger.warning)(
             "No multi-drug combination matched and none of the medications were recognized: %s",
             [name for name, _ in per_drug],
         )
@@ -376,12 +398,51 @@ def _highest_single_classification(medications: list[dict], json_path: Path) -> 
     return result
 
 
+def _merge_classifications(
+    pogo_classification: Optional[str], uza_classification: Optional[str]
+) -> list[dict]:
+    """Tag each source's result, keeping only what each source actually says.
+
+    UZA is an override dataset, so: no UZA result means POGO alone is
+    returned; a UZA-only result (POGO has nothing) is returned alone tagged
+    "UZA"; a result present in both but agreeing is returned alone tagged
+    "POGO"; and disagreeing results are both returned, tagged accordingly.
+    """
+    if uza_classification is None:
+        if pogo_classification is None:
+            return []
+        return [{"classification": pogo_classification, "source": "POGO"}]
+    if pogo_classification is None:
+        return [{"classification": uza_classification, "source": "UZA"}]
+    if pogo_classification == uza_classification:
+        return [{"classification": pogo_classification, "source": "POGO"}]
+    return [
+        {"classification": pogo_classification, "source": "POGO"},
+        {"classification": uza_classification, "source": "UZA"},
+    ]
+
+
+def _resolve_regimen_classification(
+    medications: list[dict], json_path: Path, multi_json_path: Path, quiet: bool = False
+) -> Optional[str]:
+    """Run the combo-then-highest-single algorithm against one data source."""
+    if len(medications) > 1:
+        combo_classification = classify_combination(medications, multi_json_path)
+        if combo_classification is not None:
+            return combo_classification
+        return _highest_single_classification(medications, json_path, quiet=quiet)
+    name, dose, route = _med_fields(medications[0])
+    return classify_medication(name, dose, route, json_path, quiet=quiet)
+
+
 def classify_regimen(
     medications: list[dict],
-    json_path: Path = JSON_PATH,
-    multi_json_path: Path = MULTI_JSON_PATH,
-):
-    """Classify a list of medications.
+    json_path: Path = POGO_JSON_PATH,
+    multi_json_path: Path = POGO_JSON_PATH,
+    uza_json_path: Path = UZA_JSON_PATH,
+    uza_multi_json_path: Path = UZA_JSON_PATH,
+) -> list[dict]:
+    """Classify a list of medications against both the POGO and UZA data.
 
     Each item in `medications` is a dict with keys:
       - "medication" (required)
@@ -389,25 +450,26 @@ def classify_regimen(
       - "administration_route" (optional, may be blank/None)
 
     If more than one medication is given, the combination table is checked
-    first (a subset match is enough; extra medications are ignored); a match
-    there returns its classification directly (a single str). Otherwise,
-    returns the highest-risk classification among the individual medications.
+    first (a subset match is enough; extra medications are ignored); if no
+    combination matches, the highest-risk classification among the
+    individually recognized medications is used instead. This is run once
+    against POGO and once against UZA (UZA lookups are quiet: UZA's dataset
+    only covers agents/combinations it overrides, so "not found" there is
+    expected, not a warning-worthy gap).
 
-    A single medication returns a list of one dict with the original fields
-    plus "classification", for parity with per-drug lookups elsewhere.
+    Returns a list of {"classification", "source"} dicts: just POGO's result
+    (source "POGO") when UZA has no overriding data or agrees with it, just
+    UZA's result (source "UZA") when POGO has no data at all, or both
+    (tagged "POGO" and "UZA") when the two sources disagree. An empty list
+    means neither source recognized any medication in the regimen.
     """
-    if len(medications) > 1:
-        combo_classification = classify_combination(medications, multi_json_path)
-        if combo_classification is not None:
-            return combo_classification
-        return _highest_single_classification(medications, json_path)
-
-    results = []
-    for med in medications:
-        name, dose, route = _med_fields(med)
-        classification = classify_medication(name, dose, route, json_path)
-        results.append({**med, "classification": classification})
-    return results
+    if not medications:
+        return []
+    pogo_classification = _resolve_regimen_classification(medications, json_path, multi_json_path)
+    uza_classification = _resolve_regimen_classification(
+        medications, uza_json_path, uza_multi_json_path, quiet=True
+    )
+    return _merge_classifications(pogo_classification, uza_classification)
 
 
 if __name__ == "__main__":
@@ -430,6 +492,18 @@ if __name__ == "__main__":
         {"medication": "doxorubicin", "dose": "", "administration_route": ""},
     ]
     print("combination regimen:", classify_regimen(combo))
+
+    # POGO and UZA disagree on oral busulfan (low vs. moderate): both are returned.
+    oral_busulfan = [{"medication": "Busulfan", "dose": "", "administration_route": "oral"}]
+    print("POGO/UZA disagreement:", classify_regimen(oral_busulfan))
+
+    # UZA adds Blinatumomab, which POGO doesn't cover at all: only the UZA result is returned.
+    uza_only_drug = [{"medication": "Blinatumomab", "dose": "", "administration_route": ""}]
+    print("UZA-only medication:", classify_regimen(uza_only_drug))
+
+    # No UZA override for cisplatin: only the POGO result is returned.
+    pogo_only_drug = [{"medication": "Cisplatin", "dose": "", "administration_route": ""}]
+    print("no UZA override:", classify_regimen(pogo_only_drug))
 
     # Exact dose threshold shared by two buckets (high lower bound == moderate upper bound).
     print("Methotrexate @ 12 g/m2:", classify_medication("Methotrexate", dose="12 g/m2"))
