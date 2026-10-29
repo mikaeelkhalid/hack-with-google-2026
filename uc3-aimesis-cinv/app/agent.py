@@ -801,6 +801,11 @@ Format your response concisely using Markdown headings, tables, and bullet point
 ### 4. CINV Parent Passport (when requested)
 - Render a Markdown table (`| Day | Time | Medication | Volume (mL) |`) using only `volume_ml` values from `build_parent_passport`, followed by key parent instructions and Belgian hospital family resources.
 
+### 5. References & Guideline Sources
+- Always include a compact bullet list mapping every `[S<n>]` citation used in your response to its exact document `file`, `page` number, and rule summary from `search_guidelines`:
+  * **`[S1]`** `Anti-emetica beleid CINV - V2.pdf` (p. 1) — UZA July 2026 v2 HEC classification & prophylaxis backbone
+  * **`[S2]`** `POGO Emetogenicity Classification Guideline Final-rev- 250111.pdf` (p. 7) — POGO pediatric emetogenicity tier cross-check
+
 REGULATORY & SAFETY GUARDRAILS:
 - Copy clinical numbers (`mg`, `mL`, `BSA`, `[S#]`) from deterministic tool results only. Never invent or calculate doses, volumes, BSA, or citation IDs.
 - If `unverified_sources` in tool outputs is non-empty, note in one line that those reference table rows await final pharmacist verification.

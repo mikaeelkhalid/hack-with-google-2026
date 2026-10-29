@@ -25,9 +25,12 @@ def _pages() -> list[tuple[str, int, str]]:
 
     out: list[tuple[str, int, str]] = []
     for f in sorted(glob.glob(DOCS)):
+        base = os.path.basename(f)
+        if "briefing" in base.lower():
+            continue
         reader = PdfReader(f)
         for i, page in enumerate(reader.pages, start=1):
-            out.append((os.path.basename(f), i, page.extract_text() or ""))
+            out.append((base, i, page.extract_text() or ""))
     return out
 
 
