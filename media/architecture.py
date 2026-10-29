@@ -11,19 +11,21 @@ from diagrams.gcp.analytics import BigQuery
 from diagrams.gcp.compute import Run
 from diagrams.gcp.ml import VertexAI
 from diagrams.gcp.operations import Logging
-from diagrams.gcp.storage import GCS
+from diagrams.generic.storage import Storage
 from diagrams.onprem.client import Users
 from diagrams.programming.language import Python
 
 OUT = Path(__file__).with_name("almesis_copilot_architecture")
 OPTIONAL = {"style": "dashed", "color": "gray50"}
+# Tall node so the multi-line label sits inside the node instead of under arrows.
+TALL = {"height": "3.6", "width": "3.4", "imagepos": "tc", "labelloc": "b", "imagescale": "false"}
 
 with Diagram(
     "Almesis Copilot (uc3-aimesis-cinv)",
     filename=str(OUT),
     show=False,
     direction="LR",
-    graph_attr={"fontsize": "22", "pad": "0.4", "nodesep": "0.9", "ranksep": "1.2", "splines": "spline"},
+    graph_attr={"fontsize": "22", "pad": "0.4", "nodesep": "0.7", "ranksep": "1.0", "splines": "spline"},
     node_attr={"fontsize": "13"},
 ):
     clinician = Users("Clinician / pharmacist\n(+ parent passport)")
@@ -31,38 +33,42 @@ with Diagram(
     with Cluster("Cloud Run · europe-west1 (agents-cli deploy)"):
         ui = Run("FastAPI\nADK web UI + A2A")
 
-        with Cluster("ADK root_agent (single agent)"):
-            agent = VertexAI("root_agent\nGemini 2.5 Flash")
-            guard = Python("Guardrail callback\nchecks mg / mL / [S#]\n+ advisory label")
-
+        with Cluster("ADK app"):
+            agent = Python("root_agent\n(single LlmAgent)")
             tools = Python(
-                "Deterministic tools (no LLM math)\n\n"
+                "Deterministic tools\n(no LLM math)\n\n"
                 "classify_regimen_emetogenicity\n"
                 "get_pogo_guideline_recommendation\n"
                 "check_ddi_interactions\n"
                 "calculate_risk_adjusted_regimen\n"
                 "compute_antiemetic_doses (mg → mL)\n"
                 "search_guidelines (page cites)\n"
-                "build_parent_passport (en/nl/fr)"
+                "build_parent_passport (en/nl/fr)",
+                **TALL,
             )
+            guard = Python("Guardrail callback\nchecks mg / mL / [S#]\n+ advisory label")
 
         with Cluster("Bundled data (in the container)"):
             tables = Python("app/tables.py\nsource + page\nverified flag")
-            pdfs = GCS("docs/ PDFs\nUZA v2 policy\nPOGO 250111")
+            pdfs = Storage("docs/ PDFs\nUZA v2 policy\nPOGO 250111")
 
-    telemetry = Logging("Cloud Trace / Logging\n(starter telemetry)")
+    gemini = VertexAI("Gemini 2.5 Flash\nVertex AI (global endpoint)")
+    telemetry = Logging("Cloud Trace / Logging\n(built into starter)")
 
     with Cluster("If time allows"):
-        bq = BigQuery("BigQuery data products\n(mocks DDL, EU)")
-        vas = VertexAI("Vertex AI Search\n(eu)")
         extract = VertexAI("Protocol PDF extraction\n→ unverified rows")
+        bq = BigQuery("BigQuery data products\n(europe-west1)")
+        vas = VertexAI("Vertex AI Search")
 
-    clinician >> ui >> agent
-    agent >> tools
-    agent >> guard >> Edge(xlabel="advisory answer", constraint="false") >> clinician
+    clinician >> Edge(label="question / answer", dir="both") >> ui
+    ui >> Edge(dir="both") >> agent
+    agent >> Edge(label="reasoning", dir="both") >> gemini
+    agent >> Edge(label="tool calls", dir="both") >> tools
     tools >> tables
     tools >> pdfs
-    agent >> Edge(**OPTIONAL) >> telemetry
+    agent >> Edge(label="final text") >> guard
+    guard >> Edge(label="checked answer", constraint="false") >> ui
+    agent >> telemetry
     tables >> Edge(label="DATA_BACKEND", **OPTIONAL) >> bq
     pdfs >> Edge(label="GUIDELINE_BACKEND", **OPTIONAL) >> vas
     extract >> Edge(**OPTIONAL) >> bq
