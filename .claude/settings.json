@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "f=$(jq -r \".tool_input.file_path // empty\"); case \"$f\" in \"$CLAUDE_PROJECT_DIR\"/codelabs/*|\"$CLAUDE_PROJECT_DIR\"/usecase/*|codelabs/*|usecase/*|\"$CLAUDE_PROJECT_DIR\"/uc3-aimesis-cinv/codelabs/*|\"$CLAUDE_PROJECT_DIR\"/uc3-aimesis-cinv/docs/*|uc3-aimesis-cinv/codelabs/*|uc3-aimesis-cinv/docs/*) echo \"{\\\"hookSpecificOutput\\\":{\\\"hookEventName\\\":\\\"PreToolUse\\\",\\\"permissionDecision\\\":\\\"deny\\\",\\\"permissionDecisionReason\\\":\\\"codelabs/, usecase/ and uc3-aimesis-cinv/{codelabs,docs}/ are read-only organizer reference material\\\"}}\";; esac"
+            "command": "f=$(jq -r \".tool_input.file_path // empty\"); case \"$f\" in \"$CLAUDE_PROJECT_DIR\"/uc3-aimesis-cinv/codelabs/*|\"$CLAUDE_PROJECT_DIR\"/uc3-aimesis-cinv/docs/*|uc3-aimesis-cinv/codelabs/*|uc3-aimesis-cinv/docs/*) echo \"{\\\"hookSpecificOutput\\\":{\\\"hookEventName\\\":\\\"PreToolUse\\\",\\\"permissionDecision\\\":\\\"deny\\\",\\\"permissionDecisionReason\\\":\\\"uc3-aimesis-cinv/{codelabs,docs}/ are read-only organizer reference material\\\"}}\";; esac"
           }
         ]
       }

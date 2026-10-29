@@ -8,10 +8,10 @@ Almesis Copilot: hackathon entry for "Solve with Google: BSPHO 2026", Use Case 3
 
 The organizers provided a starter project in `uc3-aimesis-cinv/` (agents-cli 1.5.0 ADK template, Cloud Run target, A2A enabled). **All app code lives there; build on it, don't start a parallel codebase.** Before designing anything read:
 
-- `uc3-aimesis-cinv/.agents-cli-spec.md` — the agent spec (single `root_agent` + 4 deterministic tools).
-- `uc3-aimesis-cinv/app/agent.py` — agent, tools, in-memory clinical tables, Casus 1–3.
-- `uc3-aimesis-cinv/GEMINI.md` — agents-cli workflow (eval loop, deploy needs explicit human approval).
-- `almesis-copilot.md` (diagram: `media/almesis_copilot_architecture.png`) — our product plan (regenerate the diagram with `uv run --with diagrams python media/architecture.py`). `docs/BUILD_SPEC.md` — phased build spec on top of the starter (single `root_agent`, new features = new tools).
+- `uc3-aimesis-cinv/.agents-cli-spec.md` — the agent spec (single `root_agent` + deterministic tools).
+- `uc3-aimesis-cinv/app/` — `agent.py`, `tables.py`, `dosing.py`, `guidelines.py`, `passport.py`, `guardrail.py`.
+- `uc3-aimesis-cinv/GEMINI.md` — agents-cli workflow (eval loop, deploy needs explicit human approval) and workshop assets index.
+- `almesis-copilot.md` (diagram: `media/almesis_copilot_architecture.png`) — unified product plan, clinical spec, and phased build guide (regenerate the diagram with `uv run --with diagrams python media/architecture.py`).
 
 ## Commands (run inside `uc3-aimesis-cinv/`)
 
@@ -36,6 +36,6 @@ All resources in `europe-west1` (zone `europe-west1-b`). Never create resources 
 
 ## Repo
 
-- Organizer reference material, read-only — never edit: `codelabs/`, `usecase/`, `uc3-aimesis-cinv/codelabs/`, `uc3-aimesis-cinv/docs/` (clinical PDFs/docx/pptx, partly Dutch). `uc3-aimesis-cinv/docs/` is the canonical copy of the source documents.
+- Organizer reference material, read-only — never edit: `uc3-aimesis-cinv/codelabs/`, `uc3-aimesis-cinv/docs/` (clinical PDFs/docx/pptx, partly Dutch). `uc3-aimesis-cinv/docs/` is the canonical copy of the source documents.
 - Asset filenames contain spaces (some have a trailing space before `.pptx`); always quote paths.
 - Solo project: commit directly to `main`, no branches/PRs.

@@ -71,8 +71,7 @@ Ask the user: Option A (simple single-project) or Option B (full CI/CD pipeline 
   - `docs/POGO Emetogenicity Classification Guideline Final-rev- 250111.pdf`: Official 87-page POGO Acute Emetogenic Potential Guideline (Final-rev-250111)
   - `docs/casus voorbeelden.docx`: 3 official UZA clinical case examples (**Casus 1**: 16yo HR-NBL2 RAPID COJEC Cycle B4; **Casus 2**: 2yo ALLTogether1 Induction B Day 8; **Casus 3**: iEuroEwing 5-day IE Cycle #3)
   - `docs/user stories AImesis version 2.pdf`: 6 official clinical user stories (Stories 1–6)
+  - `docs/AImesis_ Pediatric CINV Clinical Decision Support.pptx`: 5-slide Hackathon Architecture & Judging Scorecard deck
   - `docs/AImesis_pediatric CINVcontrol clinical decision support .pptx`: Updated 9-slide clinical briefing deck (Katleen Balliauw & Anthe De Pauw, UZA)
   - `docs/Pitch slides AImesis versie 2 .pptx`: Main-stage pitch slide (`Every child with cancer deserves comfort!`)
   - `docs/CINV resources in Belgium.xlsx`: Curated Belgian pediatric oncology family resources (`UZ Gent`, `UZ Leuven`, `UZA`, `HUDERF`, `Stichting tegen Kanker`)
-- **Mocks & Fixtures (`mocks/`)**:
-  - `mocks/fixtures/` & `mocks/data_products/`: UC3 fixtures and data products

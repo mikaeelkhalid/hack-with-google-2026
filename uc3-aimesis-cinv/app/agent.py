@@ -17,303 +17,39 @@
 """AImesis (uc3-aimesis-cinv): Pediatric CINV Clinical Decision Support ADK Agent.
 
 Grounded in:
-  1. UZA Hospital Protocol Baseline: `Anti-emetica beleid CINV - V2.pdf` (July 2026 Versie 2)
+  1. UZA Hospital Protocol Baseline: `Anti-emetica beleid CINV - V2.pdf` (July 2026 Versie 2, p.1-2)
   2. POGO Emetogenicity Classification Guideline: `POGO Emetogenicity Classification Guideline Final-rev- 250111.pdf`
   3. UZA Clinical Case Examples: `casus voorbeelden.docx` (Casus 1: HR-NBL2 RAPID COJEC, Casus 2: ALLTogether1 Inductie B, Casus 3: iEuroEwing 5-day IE)
-  4. Official AImesis User Stories v2 (`user stories AImesis version 2.pdf`) & Pitch/Briefing Slides (`AImesis_pediatric CINVcontrol clinical decision support .pptx`, `Pitch slides AImesis versie 2 .pptx`)
+  4. Official AImesis User Stories v2 (`user stories AImesis version 2.pdf`) & Pitch/Briefing Slides
   5. Belgian Family CINV Resources (`CINV resources in Belgium.xlsx`)
 """
+
+from __future__ import annotations
 
 from typing import Any
 
 from google.adk.agents import Agent
 from google.adk.apps import App
 
+from app.dosing import compute_antiemetic_doses
+from app.guardrail import guard
+from app.guidelines import search_guidelines
+from app.passport import build_parent_passport
+from app.tables import (
+    ADVISORY_LABEL,
+    COMBINATION_ESCALATION_RULES,
+    NK1_ANTAGONISTS,
+    PEDIATRIC_CHEMO_EMETOGENICITY,
+    QTC_PROLONGING_AGENTS,
+    QTC_RISK_REGISTRY,
+    RANK_TO_TIER,
+    STRONG_MODERATE_AZOLES,
+    UZA_CASUS_VOORBEELDEN,
+    VINCA_ALKALOIDS,
+    usable,
+)
+
 MODEL = "gemini-2.5-flash"
-ADVISORY_LABEL = "Advisory Only — Requires Clinician Sign-Off"
-
-# Official UZA Clinical Case Examples from `casus voorbeelden.docx`
-UZA_CASUS_VOORBEELDEN: dict[str, dict[str, Any]] = {
-    "casus_1": {
-        "title": "Casus 1 — 16yo Girl with Neuroblastoma (HR-NBL2 RAPID COJEC Induction, Cycle B4)",
-        "patient": "16-year-old female",
-        "diagnosis": "High-Risk Neuroblastoma",
-        "protocol": "HR-NBL2 (RAPID COJEC induction: alternating A1/B1/C1/B2/A2/B3/C2/B4 every 10 days)",
-        "current_cycle": "Cyclus B4 (25/09/2026): Vincristine (Low) + Cisplatin (High)",
-        "overall_emetogenicity": "High (HEC)",
-        "prior_cycle_history": (
-            "During prior Cycle B3 (05/09/2026), EHR prescribed Ondansetron 2x/d + Aprepitant + "
-            "Dexamethasone + Olanzapine. Ward progress note (toernota) documented breakthrough nausea on Day 2."
-        ),
-        "expected_recommendation": (
-            "Optimize HEC quadruple therapy per UZA July 2026 v2 policy: increase Ondansetron from 2x/d "
-            "to full HEC 3x/d dosing (5 mg/m2 max 8 mg 3x/d) OR switch to long-acting IV Palonosetron "
-            "(in consultation with supervision/pharmacy, not combined with Ondansetron within 3 days) + "
-            "Aprepitant (125 mg D1, 80 mg D2-D3) + Dexamethasone (50% reduced for aprepitant CYP3A4 interaction) + "
-            "scheduled evening Olanzapine; add PRN breakthrough Alizapride or Lorazepam and track nausea via CINV Passport / Companion App."
-        ),
-    },
-    "casus_2": {
-        "title": "Casus 2 — 2yo Boy with Acute Lymphoblastic Leukemia (ALLTogether1 Induction B, Day 8)",
-        "patient": "2-year-old male",
-        "diagnosis": "Acute Lymphoblastic Leukemia (ALL)",
-        "protocol": "ALLTogether1, Induction B (Day 8 chemotherapy: Vincristine + Daunorubicin)",
-        "current_cycle": "Induction B Day 8: Vincristine (Low) + Daunorubicin (Moderate / MEC)",
-        "overall_emetogenicity": "Moderate (MEC)",
-        "prior_cycle_history": "No nausea or vomiting reported during previous administration in EHR.",
-        "expected_recommendation": (
-            "MEC Dual Prophylaxis with STRICT Steroid Exclusion ('GEEN Dexamethasone bij ALL'): "
-            "prescribe Ondansetron (5 mg/m2 2x/d) + Aprepitant (3 mg/kg D1, 2 mg/kg D2-D3 oral suspension). "
-            "Dexamethasone is strictly contraindicated in ALL protocols."
-        ),
-    },
-    "casus_3": {
-        "title": "Casus 3 — Ewing Sarcoma Patient (iEuroEwing Alternating VDC/IE, 5-Day IE Cycle #3)",
-        "patient": "Pediatric/adolescent Ewing Sarcoma patient",
-        "diagnosis": "Ewing Sarcoma",
-        "protocol": "iEuroEwing (alternating VDC and 5-day IE cycles; today starting IE Cycle #3)",
-        "current_cycle": "5-day multi-day regimen of Ifosfamide (MEC alone) + Etoposide (LEC alone)",
-        "overall_emetogenicity": (
-            "High (HEC) — Combination of Ifosfamide + Etoposide escalates to High Emetogenic Risk (HEC) "
-            "per both POGO Pediatric Guidelines and UZA July 2026 v2 policy ('Combinatie: Ifosfamide/Etoposide = HOOG EMETOGEEN')."
-        ),
-        "prior_cycle_history": "Breakthrough nausea and vomiting documented on Day 4 of prior 5-day IE cycles.",
-        "expected_recommendation": (
-            "Maximal HEC Quadruple Prophylaxis: Ondansetron (3x/d) + Dexamethasone + Aprepitant + Olanzapine. "
-            "Because IE is a 5-day multi-day regimen and the patient experienced Day 4 breakthrough nausea in "
-            "prior cycles, consider extending Aprepitant onto Days 4 and 5 in consultation with the clinical pharmacist."
-        ),
-    },
-}
-
-# Curated POGO / MASCC Pediatric Antineoplastic Emetogenicity Reference Table
-PEDIATRIC_CHEMO_EMETOGENICITY: dict[str, dict[str, Any]] = {
-    # High Emetic Risk (>= 90% frequency without prophylaxis)
-    "cisplatin": {
-        "tier": "High",
-        "rank": 4,
-        "emetic_frequency_pct": ">=90%",
-        "notes": "Biphasic CINV (acute 0-24h + delayed 24-120h); mandates triple prophylaxis.",
-        "guideline": "POGO / MASCC 2023 Pediatric Emetogenicity Classification",
-    },
-    "carboplatin": {
-        "tier": "High",
-        "rank": 4,
-        "emetic_frequency_pct": ">=90%",
-        "notes": "Pediatric POGO classifies IV carboplatin (especially AUC >= 4 or standard pediatric doses) as High emetic risk.",
-        "guideline": "POGO / MASCC Pediatric Emetogenicity Guideline",
-    },
-    "cyclophosphamide": {
-        "tier": "High",
-        "rank": 4,
-        "emetic_frequency_pct": ">=90% (at >=1000 mg/m2 or with anthracycline)",
-        "notes": "High emetic risk at >=1 g/m2 IV or in combination with anthracyclines; CYP3A4 substrate.",
-        "guideline": "POGO / MASCC Pediatric Emetogenicity Guideline",
-    },
-    "dacarbazine": {
-        "tier": "High",
-        "rank": 4,
-        "emetic_frequency_pct": ">=90%",
-        "notes": "Potent acute emetogen; requires triple antiemetic coverage.",
-        "guideline": "POGO / MASCC Pediatric Emetogenicity Guideline",
-    },
-    "dactinomycin": {
-        "tier": "High",
-        "rank": 4,
-        "emetic_frequency_pct": ">=90%",
-        "notes": "Actinomycin D carries High emetic risk in pediatric Wilms/rhabdomyosarcoma protocols.",
-        "guideline": "POGO / MASCC Pediatric Emetogenicity Guideline",
-    },
-    "ifosfamide": {
-        "tier": "Moderate",
-        "rank": 3,
-        "emetic_frequency_pct": "30-90% (Moderate alone; High when combined with etoposide or anthracycline)",
-        "notes": (
-            "Moderate emetic risk alone (UZA v2 MATIG EMETOGEEN / POGO); escalates to High (HEC) "
-            "when combined with etoposide (e.g., iEuroEwing 5-day IE regimen, Casus 3). "
-            "Caution with aprepitant (CYP3A4 neurotoxic chloroacetaldehyde metabolite)."
-        ),
-        "guideline": "UZA Anti-emetica beleid CINV v2 (July 2026) & POGO 250111 Emetogenicity Guideline",
-    },
-    # Moderate Emetic Risk (30-90% frequency without prophylaxis)
-    "doxorubicin": {
-        "tier": "Moderate",
-        "rank": 3,
-        "emetic_frequency_pct": "30-90%",
-        "notes": "Moderate alone; escalates to High when paired with cyclophosphamide or ifosfamide. Potential QTc effects.",
-        "guideline": "POGO / MASCC Pediatric Emetogenicity Guideline",
-    },
-    "daunorubicin": {
-        "tier": "Moderate",
-        "rank": 3,
-        "emetic_frequency_pct": "30-90%",
-        "notes": "Moderate emetic risk anthracycline; verify protocol steroid allowances in leukemia induction.",
-        "guideline": "POGO / MASCC Pediatric Emetogenicity Guideline",
-    },
-    "epirubicin": {
-        "tier": "Moderate",
-        "rank": 3,
-        "emetic_frequency_pct": "30-90%",
-        "notes": "Moderate emetic risk anthracycline.",
-        "guideline": "POGO / MASCC Pediatric Emetogenicity Guideline",
-    },
-    "idarubicin": {
-        "tier": "Moderate",
-        "rank": 3,
-        "emetic_frequency_pct": "30-90%",
-        "notes": "Moderate emetic risk anthracycline.",
-        "guideline": "POGO / MASCC Pediatric Emetogenicity Guideline",
-    },
-    "cytarabine": {
-        "tier": "Moderate",
-        "rank": 3,
-        "emetic_frequency_pct": "30-90% (moderate/high-dose >= 1 g/m2)",
-        "notes": "Moderate emetic risk at standard/high pediatric AML/ALL doses; Low at low subcutaneous doses.",
-        "guideline": "POGO / MASCC Pediatric Emetogenicity Guideline",
-    },
-    "methotrexate": {
-        "tier": "Moderate",
-        "rank": 3,
-        "emetic_frequency_pct": "30-90% (high-dose >= 250 mg/m2 IV)",
-        "notes": "High-dose IV methotrexate (>=250 mg/m2 to 5 g/m2) is Moderate emetic risk; low-dose PO/IV is Minimal/Low.",
-        "guideline": "POGO / MASCC Pediatric Emetogenicity Guideline",
-    },
-    "irinotecan": {
-        "tier": "Moderate",
-        "rank": 3,
-        "emetic_frequency_pct": "30-90%",
-        "notes": "Moderate emetic risk; causes both acute cholinergic and delayed diarrhea/emesis; CYP3A4 substrate.",
-        "guideline": "POGO / MASCC Pediatric Emetogenicity Guideline",
-    },
-    "oxaliplatin": {
-        "tier": "Moderate",
-        "rank": 3,
-        "emetic_frequency_pct": "30-90%",
-        "notes": "Moderate emetic risk platinum analog.",
-        "guideline": "POGO / MASCC Pediatric Emetogenicity Guideline",
-    },
-    "temozolomide": {
-        "tier": "Moderate",
-        "rank": 3,
-        "emetic_frequency_pct": "30-90%",
-        "notes": "Oral/IV alkylating agent with Moderate emetic risk; requires scheduled pre-dose 5-HT3 prophylaxis.",
-        "guideline": "POGO / MASCC Pediatric Emetogenicity Guideline",
-    },
-    # Low Emetic Risk (10-30% frequency without prophylaxis)
-    "etoposide": {
-        "tier": "Low",
-        "rank": 2,
-        "emetic_frequency_pct": "10-30%",
-        "notes": "IV etoposide is Low emetic risk (oral etoposide can be Low-Moderate); CYP3A4 substrate.",
-        "guideline": "POGO / MASCC Pediatric Emetogenicity Guideline",
-    },
-    "topotecan": {
-        "tier": "Low",
-        "rank": 2,
-        "emetic_frequency_pct": "10-30%",
-        "notes": "Low emetic risk camptothecin analog.",
-        "guideline": "POGO / MASCC Pediatric Emetogenicity Guideline",
-    },
-    "paclitaxel": {
-        "tier": "Low",
-        "rank": 2,
-        "emetic_frequency_pct": "10-30%",
-        "notes": "Low emetic risk taxane.",
-        "guideline": "POGO / MASCC Pediatric Emetogenicity Guideline",
-    },
-    "gemcitabine": {
-        "tier": "Low",
-        "rank": 2,
-        "emetic_frequency_pct": "10-30%",
-        "notes": "Low emetic risk nucleoside analog.",
-        "guideline": "POGO / MASCC Pediatric Emetogenicity Guideline",
-    },
-    "fluorouracil": {
-        "tier": "Low",
-        "rank": 2,
-        "emetic_frequency_pct": "10-30%",
-        "notes": "Low emetic risk antimetabolite.",
-        "guideline": "POGO / MASCC Pediatric Emetogenicity Guideline",
-    },
-    # Minimal Emetic Risk (< 10% frequency without prophylaxis)
-    "vincristine": {
-        "tier": "Minimal",
-        "rank": 1,
-        "emetic_frequency_pct": "<10%",
-        "notes": "Minimal emetic risk; major CYP3A4/P-gp neurotoxicity interaction with azole antifungals.",
-        "guideline": "POGO / MASCC Pediatric Emetogenicity Guideline",
-    },
-    "vinblastine": {
-        "tier": "Minimal",
-        "rank": 1,
-        "emetic_frequency_pct": "<10%",
-        "notes": "Minimal emetic risk vinca alkaloid; CYP3A4 substrate.",
-        "guideline": "POGO / MASCC Pediatric Emetogenicity Guideline",
-    },
-    "bleomycin": {
-        "tier": "Minimal",
-        "rank": 1,
-        "emetic_frequency_pct": "<10%",
-        "notes": "Minimal emetic risk.",
-        "guideline": "POGO / MASCC Pediatric Emetogenicity Guideline",
-    },
-    "pegaspargase": {
-        "tier": "Minimal",
-        "rank": 1,
-        "emetic_frequency_pct": "<10%",
-        "notes": "Minimal direct emetogenicity; monitor for pancreatitis which can mimic CINV.",
-        "guideline": "POGO / MASCC Pediatric Emetogenicity Guideline",
-    },
-    "asparaginase": {
-        "tier": "Minimal",
-        "rank": 1,
-        "emetic_frequency_pct": "<10%",
-        "notes": "Minimal direct emetogenicity; monitor for pancreatitis and hepatotoxicity.",
-        "guideline": "POGO / MASCC Pediatric Emetogenicity Guideline",
-    },
-    "mercaptopurine": {
-        "tier": "Minimal",
-        "rank": 1,
-        "emetic_frequency_pct": "<10%",
-        "notes": "Minimal emetic risk oral maintenance agent.",
-        "guideline": "POGO / MASCC Pediatric Emetogenicity Guideline",
-    },
-    "blinatumomab": {
-        "tier": "Minimal",
-        "rank": 1,
-        "emetic_frequency_pct": "<10%",
-        "notes": "Minimal emetic risk BiTE therapy.",
-        "guideline": "POGO / MASCC Pediatric Emetogenicity Guideline",
-    },
-}
-
-RANK_TO_TIER = {4: "High", 3: "Moderate", 2: "Low", 1: "Minimal", 0: "Unknown"}
-ANTHRACYCLINES = {"doxorubicin", "daunorubicin", "epirubicin", "idarubicin"}
-STRONG_MODERATE_AZOLES = {
-    "voriconazole",
-    "posaconazole",
-    "itraconazole",
-    "fluconazole",
-    "isavuconazole",
-}
-NK1_ANTAGONISTS = {"aprepitant", "fosaprepitant"}
-QTC_PROLONGING_AGENTS = {
-    "ondansetron",
-    "granisetron",
-    "olanzapine",
-    "metoclopramide",
-    "domperidone",
-    "voriconazole",
-    "posaconazole",
-    "itraconazole",
-    "fluconazole",
-    "doxorubicin",
-    "daunorubicin",
-    "epirubicin",
-    "idarubicin",
-    "arsenic trioxide",
-}
-VINCA_ALKALOIDS = {"vincristine", "vinblastine", "vinorelbine"}
 
 
 def _normalize_drug_name(name: str) -> str:
@@ -348,8 +84,8 @@ def _normalize_drug_name(name: str) -> str:
 def classify_regimen_emetogenicity(chemo_drugs_list: list[str]) -> dict[str, Any]:
     """Classifies individual pediatric chemotherapy drugs and overall regimen emetogenicity.
 
-    Evaluates each chemotherapy agent against the Pediatric Oncology Group of Ontario
-    (POGO) and MASCC/ESMO pediatric antineoplastic emetogenicity classification
+    Evaluates each chemotherapy agent against UZA July 2026 v2 (`Anti-emetica beleid CINV - V2.pdf` p.1)
+    and POGO (`POGO 250111`) pediatric antineoplastic emetogenicity classifications
     (High, Moderate, Low, Minimal) and applies multi-agent synergy escalation rules.
 
     Args:
@@ -358,8 +94,8 @@ def classify_regimen_emetogenicity(chemo_drugs_list: list[str]) -> dict[str, Any
 
     Returns:
         A dictionary containing per-drug emetogenicity details, the overall regimen
-        emetogenic tier, whether multi-agent synergy escalation was applied, and
-        clinical rationale citations.
+        emetogenic tier, whether multi-agent synergy escalation was applied,
+        verifiable `sources` / `unverified_sources`, and `needs_clinician_review`.
     """
     if not chemo_drugs_list:
         return {
@@ -367,8 +103,11 @@ def classify_regimen_emetogenicity(chemo_drugs_list: list[str]) -> dict[str, Any
             "per_drug_classification": [],
             "overall_emetogenic_tier": "Minimal",
             "synergy_escalation_applied": False,
-            "guideline_reference": "POGO / MASCC 2023 Pediatric Emetogenicity Classification",
+            "guideline_reference": "UZA Anti-emetica beleid CINV v2 p.1 & POGO 250111",
             "clinical_rationale": "No chemotherapy agents provided; defaulted to Minimal emetic risk.",
+            "sources": [],
+            "unverified_sources": [],
+            "needs_clinician_review": False,
             "advisory_status": ADVISORY_LABEL,
         }
 
@@ -376,87 +115,101 @@ def classify_regimen_emetogenicity(chemo_drugs_list: list[str]) -> dict[str, Any
     max_rank = 0
     moderate_count = 0
     normalized_set: set[str] = set()
+    sources: set[str] = set()
+    unverified_sources: set[str] = set()
+    needs_clinician_review = False
 
     for raw_drug in chemo_drugs_list:
         norm = _normalize_drug_name(raw_drug)
         normalized_set.add(norm)
         info = PEDIATRIC_CHEMO_EMETOGENICITY.get(norm)
-        if info:
+        if info and usable(info):
             rank = info["rank"]
             max_rank = max(max_rank, rank)
             if rank == 3:
                 moderate_count += 1
+            src = info.get("source", "UZA CINV v2 p.1")
+            sources.add(src)
+            if not info.get("verified"):
+                unverified_sources.add(src)
             per_drug.append(
                 {
                     "input_name": raw_drug,
                     "canonical_name": norm,
                     "emetogenic_tier": info["tier"],
+                    "uza_tier": info.get("uza_tier", info["tier"]),
+                    "pogo_tier": info.get("pogo_tier", info["tier"]),
                     "emetic_frequency_pct": info["emetic_frequency_pct"],
                     "clinical_notes": info["notes"],
+                    "source": src,
+                    "verified": bool(info.get("verified")),
                 }
             )
         else:
-            # Conservative fallback to Moderate (rank 2/3 review alert) for unrecognized antineoplastics
+            needs_clinician_review = True
+            if info and not usable(info):
+                unverified_sources.add(info.get("source", "UZA CINV v2 p.1"))
             max_rank = max(max_rank, 2)
             per_drug.append(
                 {
                     "input_name": raw_drug,
                     "canonical_name": norm,
-                    "emetogenic_tier": "Low-to-Moderate (Unlisted — Verify Protocol)",
-                    "emetic_frequency_pct": "Unknown (manual POGO lookup required)",
+                    "emetogenic_tier": "Unknown (Unverified or Unlisted — Clinician Review Required)",
+                    "emetic_frequency_pct": "Unknown (manual UZA v2 / POGO lookup required)",
                     "clinical_notes": (
-                        "Agent not in baseline table; verify dose-specific POGO emetogenicity manually."
+                        "Agent not usable without clinician verification or not in baseline table."
                     ),
+                    "source": info.get("source", "p.TODO") if info else "p.TODO",
+                    "verified": False,
                 }
             )
 
     synergy_escalation = False
-    synergy_reason = "Overall tier determined by the single most emetogenic agent in the regimen (POGO rule)."
+    synergy_reason = "Overall tier determined by the single most emetogenic agent in the regimen (UZA v2 / POGO rule)."
 
-    # Synergy rule:
-    # 1. Ifosfamide + Etoposide (iEuroEwing IE regimen -> Casus 3, UZA v2 'Combinatie: Ifosfamide/Etoposide = HOOG EMETOGEEN' & POGO 250111)
-    # 2. Cytarabine + Daunorubicin/Etoposide (UZA v2 'Combinatie: Cytarabine/Daunorubicine of Etoposide = HOOG EMETOGEEN')
-    # 3. Cyclophosphamide + Anthracycline OR >= 2 Moderate agents
-    if {"ifosfamide", "etoposide"}.issubset(normalized_set):
-        max_rank = 4
-        synergy_escalation = True
-        synergy_reason = (
-            "Multi-agent combination escalation applied (Casus 3 / iEuroEwing IE rule): "
-            "While Ifosfamide is Moderate (MEC) and Etoposide is Low (LEC) individually, "
-            "the combination of Ifosfamide + Etoposide is classified as High Emetogenic Risk (HEC) "
-            "per UZA July 2026 v2 policy ('Combinatie: Ifosfamide/Etoposide = HOOG EMETOGEEN') "
-            "and POGO Emetogenicity Classification Guidelines (Final-rev-250111)."
-        )
-    elif "cytarabine" in normalized_set and normalized_set.intersection({"daunorubicin", "etoposide"}):
-        if max_rank < 4:
-            max_rank = 4
-            synergy_escalation = True
-            synergy_reason = (
-                "Multi-agent combination escalation applied: Cytarabine + Daunorubicin/Etoposide "
-                "escalates to High Emetogenic Risk (HEC) per UZA July 2026 v2 policy and POGO guidelines."
-            )
-    elif (
-        "cyclophosphamide" in normalized_set
-        and normalized_set.intersection(ANTHRACYCLINES)
-    ) or (moderate_count >= 2 and max_rank == 3):
-        if max_rank < 4:
-            max_rank = 4
-            synergy_escalation = True
-            synergy_reason = (
-                "Multi-agent synergy escalation applied: combination of multiple Moderate-risk "
-                "agents (or cyclophosphamide + anthracycline) escalates overall pediatric "
-                "emetogenicity to High per UZA July 2026 v2 & POGO/MASCC multi-agent guidelines."
-            )
+    # Evaluate combination escalation rules from app.tables.COMBINATION_ESCALATION_RULES
+    for combo_rule in COMBINATION_ESCALATION_RULES:
+        req = combo_rule.get("required_drugs")
+        any_of = combo_rule.get("any_of_drugs")
+        min_mod = combo_rule.get("min_moderate_count")
 
-    overall_tier = RANK_TO_TIER.get(max_rank, "Minimal")
+        matched = False
+        if req and req.issubset(normalized_set):
+            if any_of is None or bool(normalized_set.intersection(any_of)):
+                matched = True
+        elif min_mod and moderate_count >= min_mod and max_rank == 3:
+            matched = True
+
+        if matched:
+            if usable(combo_rule):
+                max_rank = max(max_rank, int(combo_rule["rank"]))
+                synergy_escalation = True
+                synergy_reason = combo_rule["rationale"]
+                c_src = combo_rule.get("source", "UZA CINV v2 p.1")
+                sources.add(c_src)
+                if not combo_rule.get("verified"):
+                    unverified_sources.add(c_src)
+            else:
+                needs_clinician_review = True
+                unverified_sources.add(combo_rule.get("source", "UZA CINV v2 p.1"))
+            break
+
+    overall_tier = (
+        "Unknown"
+        if (needs_clinician_review and not sources)
+        else RANK_TO_TIER.get(max_rank, "Minimal")
+    )
 
     return {
         "regimen_drugs": chemo_drugs_list,
         "per_drug_classification": per_drug,
         "overall_emetogenic_tier": overall_tier,
         "synergy_escalation_applied": synergy_escalation,
-        "guideline_reference": "POGO / MASCC / ESMO Pediatric Antineoplastic Emetogenicity Guidelines",
+        "guideline_reference": "UZA Anti-emetica beleid CINV v2 p.1 & POGO 250111 Emetogenicity Guidelines",
         "clinical_rationale": synergy_reason,
+        "sources": sorted(sources),
+        "unverified_sources": sorted(unverified_sources),
+        "needs_clinician_review": needs_clinician_review,
         "advisory_status": ADVISORY_LABEL,
     }
 
@@ -469,7 +222,7 @@ def check_ddi_interactions(
     Evaluates drug-drug interactions between primary chemotherapy / concomitant medications
     (such as azole antifungals: voriconazole, posaconazole, itraconazole, fluconazole) and
     proposed antiemetic agents (ondansetron, granisetron, palonosetron, aprepitant,
-    fosaprepitant, dexamethasone, olanzapine, lorazepam).
+    fosaprepitant, dexamethasone, olanzapine, lorazepam, domperidone, haloperidol).
 
     Args:
         primary_drugs: List of primary chemotherapy agents and concomitant medications
@@ -488,6 +241,18 @@ def check_ddi_interactions(
     interactions: list[dict[str, str]] = []
     modifications: list[str] = []
     severity_rank = 0  # 0=None, 1=Low, 2=Moderate, 3=High, 4=Critical/Contraindicated
+    sources: set[str] = {"UZA CINV v2 p.2", "CredibleMeds / POGO 250111"}
+    unverified_sources: set[str] = set()
+    needs_clinician_review = False
+
+    for d in all_drugs:
+        qtc_row = QTC_RISK_REGISTRY.get(d)
+        if qtc_row:
+            sources.add(qtc_row["source"])
+            if not qtc_row.get("verified"):
+                unverified_sources.add(qtc_row["source"])
+            if not usable(qtc_row):
+                needs_clinician_review = True
 
     present_azoles = sorted(all_drugs.intersection(STRONG_MODERATE_AZOLES))
     present_nk1 = sorted(all_drugs.intersection(NK1_ANTAGONISTS))
@@ -531,19 +296,25 @@ def check_ddi_interactions(
                     "reduces dexamethasone clearance by ~50%, doubling systemic corticosteroid exposure."
                 ),
                 "clinical_action": (
-                    "Reduce antiemetic dexamethasone dose by 50% (per POGO/MASCC guidelines) when "
-                    "co-administered with aprepitant/fosaprepitant or strong CYP3A4-inhibiting azoles."
+                    "Reduce antiemetic dexamethasone dose by 50% (per UZA v2 p.2 & POGO/MASCC guidelines: "
+                    "BSA <0.6 m2 -> 1 mg 2x/d; BSA >=0.6 m2 -> 2 mg 2x/d) when co-administered with "
+                    "aprepitant/fosaprepitant or strong CYP3A4-inhibiting azoles."
                 ),
             }
         )
         modifications.append(
-            "Reduce antiemetic dexamethasone dose by 50% (e.g., from 6 mg/m2/day to 3 mg/m2/day) due to CYP3A4 inhibition."
+            "Reduce antiemetic dexamethasone dose by 50% (e.g., from 4 mg to 2 mg 2x/d for BSA >=0.6 m2, or 2 mg to 1 mg 2x/d for BSA <0.6 m2) due to CYP3A4 inhibition."
         )
 
-    # 3. Additive QTc Prolongation (e.g., ondansetron + azole / anthracycline / olanzapine)
+    # 3. Additive QTc Prolongation (e.g., ondansetron + azole / anthracycline / olanzapine / domperidone / haloperidol)
     if len(present_qtc) >= 2:
         has_ondansetron_plus_azole = "ondansetron" in all_drugs and bool(present_azoles)
-        qtc_sev = "HIGH" if has_ondansetron_plus_azole or len(present_qtc) >= 3 else "MODERATE"
+        has_high_risk_dopamine = bool(all_drugs.intersection({"domperidone", "haloperidol"}))
+        qtc_sev = (
+            "HIGH"
+            if has_ondansetron_plus_azole or has_high_risk_dopamine or len(present_qtc) >= 3
+            else "MODERATE"
+        )
         severity_rank = max(severity_rank, 3 if qtc_sev == "HIGH" else 2)
         interactions.append(
             {
@@ -555,8 +326,8 @@ def check_ddi_interactions(
                 ),
                 "clinical_action": (
                     "Obtain baseline and on-treatment 12-lead ECG; maintain serum K+ >= 4.0 mmol/L "
-                    "and Mg2+ >= 0.8 mmol/L. Consider substituting high-dose IV ondansetron with "
-                    "palonosetron or standard-dose granisetron if QTc > 460 ms."
+                    "and Mg2+ >= 0.8 mmol/L. Avoid domperidone/haloperidol; consider substituting "
+                    "ondansetron with palonosetron or granisetron if QTc > 460 ms."
                 ),
             }
         )
@@ -607,6 +378,24 @@ def check_ddi_interactions(
             f"CRITICAL PHARMACY ALERT: Hold {', '.join(present_azoles)} around {', '.join(present_vincas)} dosing to prevent severe neurotoxicity."
         )
 
+    # 6. Palonosetron + Ondansetron co-prescription check (UZA v2 p.2 rule)
+    if "palonosetron" in norm_antiemetics and "ondansetron" in norm_antiemetics:
+        severity_rank = max(severity_rank, 4)
+        interactions.append(
+            {
+                "interacting_pair": "palonosetron + ondansetron",
+                "severity": "CRITICAL (Duplicate 5-HT3 Blockade Contraindicated Within 3 Days)",
+                "mechanism": (
+                    "Palonosetron has a 40-hour half-life and high allosteric 5-HT3 receptor affinity; "
+                    "UZA CINV v2 p.2 explicitly prohibits combining Palonosetron with Ondansetron within 3 days."
+                ),
+                "clinical_action": "Do not administer Ondansetron within 72 hours (3 days) after single-dose IV Palonosetron.",
+            }
+        )
+        modifications.append(
+            "Do NOT combine Palonosetron with Ondansetron during the first 3 days post-Palonosetron (UZA CINV v2 p.2)."
+        )
+
     severity_map = {
         0: "NONE",
         1: "LOW",
@@ -628,6 +417,9 @@ def check_ddi_interactions(
         "recommended_modifications": modifications
         or ["No major pharmacokinetic or QTc adjustments required for the evaluated drug set."],
         "safe_to_proceed_without_modification": severity_rank <= 1,
+        "sources": sorted(sources),
+        "unverified_sources": sorted(unverified_sources),
+        "needs_clinician_review": needs_clinician_review,
         "advisory_status": ADVISORY_LABEL,
     }
 
@@ -635,11 +427,11 @@ def check_ddi_interactions(
 def get_pogo_guideline_recommendation(
     emetogenic_tier: str, age: int, route: str = "IV"
 ) -> dict[str, Any]:
-    """Retrieves the baseline POGO/MASCC pediatric antiemetic prophylaxis regimen.
+    """Retrieves the baseline UZA v2 & POGO/MASCC pediatric antiemetic prophylaxis regimen.
 
     Aligns the chemotherapy emetogenic tier with age-stratified pediatric dosing rules
     (<1 year, 1-11 years, >=12 years) and preferred administration route (IV or PO)
-    according to POGO / MASCC / ESMO pediatric CINV guidelines.
+    according to UZA July 2026 v2 (`Anti-emetica beleid CINV - V2.pdf` p.1-2) and POGO 250111.
 
     Args:
         emetogenic_tier: Emetogenicity classification ("High", "Moderate", "Low", "Minimal").
@@ -648,7 +440,7 @@ def get_pogo_guideline_recommendation(
 
     Returns:
         A dictionary containing the baseline antiemetic regimen, proposed antiemetic drug
-        names for downstream DDI checking, age-specific dosing notes, and POGO citations.
+        names for downstream DDI checking, age-specific dosing notes, and UZA/POGO citations.
     """
     tier = emetogenic_tier.strip().capitalize()
     norm_route = route.strip().upper() if route else "IV"
@@ -662,75 +454,80 @@ def get_pogo_guideline_recommendation(
     else:
         age_stratum = "Adolescent (>=12 years)"
 
+    probe_row = PEDIATRIC_CHEMO_EMETOGENICITY.get("cisplatin", {"verified": False, "source": "UZA CINV v2 p.1-2 & POGO 250111"})
+    is_usable = usable(probe_row)
+    sources = ["UZA CINV v2 p.1-2", "POGO 250111 p.18-24"]
+    unverified_sources = list(sources) if not probe_row.get("verified") else []
+
     if tier == "High":
         if age < 1:
             backbone = (
-                f"5-HT3 Antagonist (Ondansetron 0.15 mg/kg {norm_route} q8h) + "
-                f"Dexamethasone (3-6 mg/m2/day {norm_route}) + "
-                "Aprepitant (ONLY if infant is >=6 months and >=6 kg: 3 mg/kg PO Day 1, 2 mg/kg PO Days 2-3)"
+                f"5-HT3 Antagonist (Ondansetron 5 mg/m2 {norm_route} 3x/d [UZA v2] / 0.15 mg/kg q8h [POGO]) + "
+                f"Dexamethasone (UZA BSA <0.6 m2: 1-2 mg 2x/d {norm_route}) + "
+                "Aprepitant (ONLY if infant is >=6 months and >6 kg: 3 mg/kg PO Day 1, 2 mg/kg PO Days 2-3)"
             )
             drugs = ["ondansetron", "dexamethasone", "aprepitant"]
             dosing_notes = (
-                "Infants <6 months: omit aprepitant (not licensed <6 months) and use dual therapy "
-                "(Ondansetron + Dexamethasone). Infants 6-11 months (>=6 kg): triple therapy with weight-based "
+                "Infants <6 months (or <=6 kg): omit aprepitant (no indication <6 months per UZA v2 p.2) and olanzapine (<2y); "
+                "use dual therapy (Ondansetron + Dexamethasone). Infants 6-11 months (>6 kg): triple therapy with weight-based "
                 "aprepitant oral suspension + 50% reduced dexamethasone."
             )
         elif age < 12:
             backbone = (
-                f"Triple Therapy: Ondansetron (0.15 mg/kg {norm_route} q8h, max 16 mg/dose) OR "
-                f"Granisetron (40 mcg/kg {norm_route} daily) + "
+                f"UZA v2 Quadruple / POGO Triple Therapy: Ondansetron (5 mg/m2 {norm_route} 3x/d, max 8 mg/dose) + "
                 "Aprepitant (3 mg/kg PO Day 1 [max 125 mg], 2 mg/kg PO Days 2-3 [max 80 mg]) + "
-                f"Dexamethasone (3 mg/m2/day {norm_route} in divided doses [50% reduced for aprepitant CYP3A4 DDI])"
+                f"Dexamethasone (UZA BSA <0.6 m2: 1 mg 2x/d; >=0.6 m2: 2 mg 2x/d {norm_route} [50% reduced for aprepitant CYP3A4]) + "
+                "Olanzapine (if age >=2y: 0.1 mg/kg PO 1x/d, max 5 mg, rounded DOWN to nearest 0.5 mg)"
             )
-            drugs = ["ondansetron", "aprepitant", "dexamethasone"]
+            drugs = ["ondansetron", "aprepitant", "dexamethasone", "olanzapine"] if age >= 2 else ["ondansetron", "aprepitant", "dexamethasone"]
             dosing_notes = (
-                "Standard POGO HEC triple prophylaxis for children 1-11 years. Dexamethasone dose reflects "
-                "mandatory 50% reduction when co-administered with aprepitant."
+                "UZA v2 p.1-2 HEC quadruple prophylaxis (Ondansetron 3x/d + Dexamethasone + Aprepitant + Olanzapine >=2y) "
+                "vs POGO HEC triple prophylaxis. Dexamethasone dose reflects mandatory 50% reduction when co-administered with aprepitant."
             )
         else:
             backbone = (
-                f"Triple Therapy: Ondansetron (0.15 mg/kg {norm_route} q8h or 8 mg {norm_route}/PO) OR "
-                "Palonosetron (20 mcg/kg IV, max 1.5 mg single dose) + "
+                f"UZA v2 Quadruple / POGO Triple Therapy: Ondansetron (5 mg/m2 {norm_route} 3x/d, max 8 mg/dose) OR "
+                "Palonosetron (<17y: 20 mcg/kg IV max 1500 mcg; >=17y: 250 mcg single dose) + "
                 "Aprepitant (125 mg PO Day 1, 80 mg PO Days 2-3) + "
-                f"Dexamethasone (3-6 mg/m2/day {norm_route}/PO, reduced 50% with aprepitant)"
+                f"Dexamethasone (2 mg 2x/d {norm_route}/PO with aprepitant; 4 mg 2x/d without) + "
+                "Olanzapine (0.1 mg/kg PO 1x/d, max 5 mg, rounded DOWN to nearest 0.5 mg)"
             )
-            drugs = ["ondansetron", "aprepitant", "dexamethasone"]
+            drugs = ["ondansetron", "aprepitant", "dexamethasone", "olanzapine"]
             dosing_notes = (
-                "Adolescent (>=12 years) POGO/MASCC HEC triple regimen. Consider Olanzapine (5-10 mg PO daily) "
-                "as a fourth agent for highly refractory or multi-day cisplatin regimens."
+                "Adolescent (>=12 years) UZA v2 HEC quadruple regimen (Ondansetron 3x/d + Dexamethasone + Aprepitant + Olanzapine). "
+                "Note: IV Aacidexam® 5 mg/mL contains ±4 mg/mL active dexamethasone base."
             )
         citation = (
-            "POGO Guideline for the Prevention of Acute and Delayed Chemotherapy-Induced Nausea "
-            "and Vomiting in Pediatric Cancer Patients (HEC Triple Prophylaxis Recommendation)"
+            "UZA Anti-emetica beleid CINV v2 p.1-2 (HOOG EMETOGEEN) & POGO Guideline for Prevention of Acute and Delayed CINV"
         )
     elif tier == "Moderate":
         backbone = (
-            f"Dual Therapy: Ondansetron (0.15 mg/kg {norm_route} q8h) OR Granisetron (40 mcg/kg {norm_route} daily) + "
-            f"Dexamethasone (6 mg/m2/day {norm_route}/PO divided q12h)"
+            f"Dual Therapy (UZA v2 MATIG EMETOGEEN): Ondansetron (5 mg/m2 {norm_route} 2x/d, max 8 mg/dose) + "
+            f"Dexamethasone (BSA <0.6 m2: 2 mg 2x/d; >=0.6 m2: 4 mg 2x/d {norm_route}/PO) OF Aprepitant (if steroids contraindicated)"
         )
         drugs = ["ondansetron", "dexamethasone"]
         dosing_notes = (
-            f"POGO MEC dual prophylaxis for {age_stratum}. If corticosteroids are contraindicated "
-            "(e.g., CNS tumor or ALL protocol restriction), substitute Aprepitant (if age >=6 months) + 5-HT3 antagonist."
+            f"UZA v2 & POGO MEC dual prophylaxis for {age_stratum} (Ondansetron 2x/d + Dexamethasone OR Aprepitant). "
+            "If corticosteroids are contraindicated ('GEEN Dexamethasone' in ALL [Casus 2], CNS/brain tumor, Dinutuximab beta), "
+            "substitute Aprepitant (if age >=6 months and >6 kg) + Ondansetron 2x/d."
         )
-        citation = "POGO / MASCC Pediatric MEC Prophylaxis Guideline (5-HT3 Antagonist + Corticosteroid)"
+        citation = "UZA Anti-emetica beleid CINV v2 p.1-2 (MATIG EMETOGEEN) & POGO Pediatric MEC Prophylaxis Guideline"
     elif tier == "Low":
         backbone = (
-            f"Monotherapy: Ondansetron (0.15 mg/kg {norm_route} single pre-chemo dose, max 8 mg) OR "
-            f"Granisetron (40 mcg/kg {norm_route} single pre-chemo dose)"
+            f"Monotherapy (UZA v2 LAAG EMETOGEEN): Ondansetron (5 mg/m2 {norm_route} 1x/d pre-chemo, max 8 mg)"
         )
         drugs = ["ondansetron"]
-        dosing_notes = f"POGO LEC single-agent 5-HT3 antagonist prophylaxis for {age_stratum}; no routine steroid or NK1 needed."
-        citation = "POGO / MASCC Pediatric LEC Prophylaxis Guideline (Single-Agent 5-HT3 Antagonist)"
+        dosing_notes = f"UZA v2 & POGO LEC single-agent 5-HT3 antagonist prophylaxis for {age_stratum}; no routine steroid or NK1 needed."
+        citation = "UZA Anti-emetica beleid CINV v2 p.1 (LAAG EMETOGEEN) & POGO Pediatric LEC Prophylaxis Guideline"
     else:
         tier = "Minimal"
-        backbone = "No routine antiemetic prophylaxis recommended."
+        backbone = "No routine antiemetic prophylaxis recommended (Geen standaard profylaxe)."
         drugs = []
         dosing_notes = (
             f"For {age_stratum} receiving Minimal emetogenic risk chemotherapy, administer antiemetics "
             "only if the patient experienced CINV on a prior identical cycle."
         )
-        citation = "POGO / MASCC Pediatric Minimal Emetic Risk Guideline"
+        citation = "UZA Anti-emetica beleid CINV v2 p.1 (MINIMAAL EMETOGEEN) & POGO Minimal Emetic Risk Guideline"
 
     return {
         "emetogenic_tier": tier,
@@ -741,6 +538,9 @@ def get_pogo_guideline_recommendation(
         "proposed_antiemetics_list": drugs,
         "pediatric_dosing_notes": dosing_notes,
         "guideline_citations": [citation, "MASCC/ESMO Pediatric Antiemetic Consensus Update"],
+        "sources": sources,
+        "unverified_sources": unverified_sources,
+        "needs_clinician_review": not is_usable,
         "advisory_status": ADVISORY_LABEL,
     }
 
@@ -752,11 +552,11 @@ def calculate_risk_adjusted_regimen(
 
     Adjusts antiemetic selection and adjunct therapies based on pediatric patient risk
     modifiers (prior CINV, anticipatory nausea/anxiety, motion sickness, steroid
-    contraindications/CNS tumor, baseline QTc prolongation, infant <6 months, or
-    hepatic impairment) and enforces the clinician sign-off safety label.
+    contraindications/CNS tumor/ALL, baseline QTc prolongation, infant <6 months, or
+    concomitant azoles) and enforces the clinician sign-off safety label.
 
     Args:
-        base_regimen: The baseline POGO-recommended regimen string.
+        base_regimen: The baseline UZA/POGO-recommended regimen string.
         patient_risk_factors: List of patient risk factor strings (e.g.,
             ["prior_cinv", "high_anxiety", "voriconazole_concomitant"]).
 
@@ -768,6 +568,9 @@ def calculate_risk_adjusted_regimen(
     normalized_factors = [f.strip().lower() for f in patient_risk_factors if f.strip()]
     adjustments: list[dict[str, str]] = []
     final_components: list[str] = [f"Baseline Backbone: {base_regimen}"]
+    probe_row = PEDIATRIC_CHEMO_EMETOGENICITY.get("cisplatin", {"verified": False})
+    sources = ["UZA CINV v2 p.1-2", "POGO 250111 p.20-28"]
+    unverified_sources = list(sources) if not probe_row.get("verified") else []
 
     for factor in normalized_factors:
         if any(k in factor for k in ("prior_cinv", "refractory", "breakthrough", "previous_cinv")):
@@ -775,16 +578,17 @@ def calculate_risk_adjusted_regimen(
                 {
                     "risk_factor": factor,
                     "modification": (
-                        "Add Olanzapine (0.14 mg/kg/dose PO daily, max 5-10 mg; if age >=2 years) "
-                        "or escalate prophylaxis by one POGO tier; enforce scheduled around-the-clock administration."
+                        "Add Olanzapine (0.1 mg/kg/dose PO 1x/d, max 5 mg, rounded DOWN to nearest 0.5 mg; if age >=2 years) "
+                        "or escalate prophylaxis by one tier; consider switching Ondansetron to IV Palonosetron (never combine within 3 days) "
+                        "or adding breakthrough Alizapride (1 mg/kg max 50 mg) / Lorazepam (0.025-0.05 mg/kg max 2 mg q6h)."
                     ),
                     "rationale": (
-                        "Prior poorly controlled CINV is the strongest predictor of breakthrough emesis in subsequent cycles (POGO Breakthrough/Refractory Guideline)."
+                        "Prior poorly controlled CINV is the strongest predictor of breakthrough emesis in subsequent cycles (UZA CINV v2 p.2 & POGO Breakthrough Guideline)."
                     ),
                 }
             )
             final_components.append(
-                "Escalation for Prior/Refractory CINV: Add scheduled Olanzapine (0.14 mg/kg/day PO, max 5-10 mg) and switch 5-HT3 antagonist to Palonosetron or Granisetron."
+                "Escalation for Prior/Refractory CINV: Add scheduled Olanzapine (0.1 mg/kg/day PO rounded down to 0.5 mg, max 5 mg) and switch 5-HT3 antagonist to Palonosetron or add Alizapride/Lorazepam."
             )
 
         if any(k in factor for k in ("anticipatory", "anxiety", "phobia")):
@@ -792,16 +596,16 @@ def calculate_risk_adjusted_regimen(
                 {
                     "risk_factor": factor,
                     "modification": (
-                        "Add Lorazepam (0.025-0.05 mg/kg PO/IV, max 1-2 mg) at bedtime prior to chemo and "
+                        "Add Lorazepam (0.04-0.08 mg/kg PO/IV, max 2 mg per UZA v2 p.2; or 0.025-0.05 mg/kg) the evening before chemo and "
                         "1-2 hours pre-infusion + behavioral/distraction therapy."
                     ),
                     "rationale": (
-                        "Conditioned anticipatory CINV responds to GABA-A anxiolysis (lorazepam) combined with psychological desensitization (POGO Anticipatory CINV Guideline)."
+                        "Conditioned anticipatory CINV responds to GABA-A anxiolysis (lorazepam) combined with psychological desensitization (UZA CINV v2 p.2 & POGO Anticipatory CINV Guideline)."
                     ),
                 }
             )
             final_components.append(
-                "Anticipatory Nausea/Anxiety Adjunct: Lorazepam 0.025-0.05 mg/kg PO/IV pre-chemo + behavioral therapy."
+                "Anticipatory Nausea/Anxiety Adjunct: Lorazepam 0.04-0.08 mg/kg (max 2 mg) PO/IV night before and 1-2h pre-chemo + behavioral therapy."
             )
 
         if "motion_sickness" in factor or "vestibular" in factor:
@@ -820,16 +624,16 @@ def calculate_risk_adjusted_regimen(
                 "Vestibular Susceptibility Note: Enforce strict 30-60 min pre-infusion prophylaxis timing."
             )
 
-        if any(k in factor for k in ("cns_tumor", "brain_tumor", "steroid_contraindicated", "no_steroid", "all_protocol")):
+        if any(k in factor for k in ("cns_tumor", "brain_tumor", "hersentumor", "steroid_contraindicated", "no_steroid", "all_protocol", "dinutuximab")):
             adjustments.append(
                 {
                     "risk_factor": factor,
                     "modification": (
-                        "OMIT Dexamethasone; substitute with Aprepitant (if age >=6 months and no azole DDI) + "
-                        "Palonosetron/Granisetron +/- Olanzapine."
+                        "OMIT Dexamethasone ('GEEN Dexamethasone' per UZA CINV v2 p.2); substitute with Aprepitant (if age >=6 months and >6 kg and no azole DDI) + "
+                        "Ondansetron/Palonosetron +/- Olanzapine."
                     ),
                     "rationale": (
-                        "Systemic corticosteroids may compromise blood-brain barrier chemotherapy penetration in CNS tumors or violate leukemia/immunotherapy protocols (POGO Steroid-Sparing Rule)."
+                        "Systemic corticosteroids are strictly contraindicated in ALL protocols (Casus 2), brain tumors (hersentumoren), Dinutuximab beta, and steroid-containing chemo (UZA CINV v2 p.2)."
                     ),
                 }
             )
@@ -843,7 +647,7 @@ def calculate_risk_adjusted_regimen(
                     "risk_factor": factor,
                     "modification": (
                         "Prefer Palonosetron or standard-dose Granisetron over high-dose IV Ondansetron; "
-                        "avoid Olanzapine/domperidone; mandate ECG and K+ >=4.0 / Mg2+ >=0.8 mmol/L."
+                        "avoid Olanzapine/domperidone/haloperidol; mandate ECG and K+ >=4.0 / Mg2+ >=0.8 mmol/L."
                     ),
                     "rationale": (
                         "Minimizes additive hERG channel blockade in patients with baseline QTc prolongation or concomitant QTc-prolonging drugs."
@@ -859,15 +663,15 @@ def calculate_risk_adjusted_regimen(
                 {
                     "risk_factor": factor,
                     "modification": (
-                        "Exclude Aprepitant/Fosaprepitant and Olanzapine; rely on weight-adjusted Ondansetron (0.15 mg/kg) +/- Dexamethasone."
+                        "Exclude Aprepitant/Fosaprepitant (<6m or <=6 kg: geen indicatie) and Olanzapine (<2y: geen indicatie); rely on weight/BSA-adjusted Ondansetron +/- Dexamethasone."
                     ),
                     "rationale": (
-                        "Aprepitant is licensed only for infants >=6 months (>=6 kg); immature hepatic CYP3A4 clearance in young infants increases toxicity risk."
+                        "Aprepitant is indicated only for infants >=6 months (>6 kg) and Olanzapine >=2 years per UZA CINV v2 p.2."
                     ),
                 }
             )
             final_components.append(
-                "Infant (<6 Months) Safety Restriction: Omit Aprepitant and Olanzapine; use weight-based Ondansetron +/- Dexamethasone."
+                "Infant (<6 Months) Safety Restriction: Omit Aprepitant and Olanzapine; use Ondansetron +/- Dexamethasone."
             )
 
         if any(k in factor for k in ("azole", "voriconazole", "posaconazole", "itraconazole")):
@@ -942,13 +746,16 @@ def calculate_risk_adjusted_regimen(
             "POGO Emetogenicity Classification Guideline (Final-rev-250111)",
             "ESMO/MASCC Consensus Recommendations for Pediatric CINV",
         ],
+        "sources": sources,
+        "unverified_sources": unverified_sources,
+        "needs_clinician_review": not usable(probe_row),
         "advisory_status": ADVISORY_LABEL,
     }
 
 
 SYSTEM_INSTRUCTION = """You are AImesis (uc3_aimesis_cinv), a specialized Pediatric Oncology Clinical Decision Support (CDS) agent for Chemotherapy-Induced Nausea and Vomiting (CINV) control, developed under Clinical Leads Katleen Balliauw & Anthe De Pauw (Hospital Pharmacists, University Hospital Antwerp / UZA).
 
-Your clinical mission is to harmonize multi-agent pediatric chemotherapy regimens with UZA's July 2026 v2 CINV policy (`Anti-emetica beleid CINV - V2.pdf`) and the POGO Emetogenicity Classification Guideline (`POGO Emetogenicity Classification Guideline Final-rev- 250111.pdf`), screen for dangerous drug-drug interactions (DDIs) and QTc prolongation, tailor prophylaxis to patient-specific risk factors (swallowing ability, formulation preferences, prior cycle EHR/toernota nausea history), and generate an individualized CINV Patient Passport (plus support companion app symptom logging).
+Your clinical mission is to harmonize multi-agent pediatric chemotherapy regimens with UZA's July 2026 v2 CINV policy (`Anti-emetica beleid CINV - V2.pdf` p.1–2) first and the POGO Emetogenicity Classification Guideline (`POGO Emetogenicity Classification Guideline Final-rev- 250111.pdf`) as the international cross-check, screen for dangerous drug-drug interactions (DDIs) and QTc prolongation, compute exact mg/mL doses via deterministic tools, cite PDF evidence pages (`[S1]`, `[S2]`), and generate a multilingual CINV Parent Passport (EN/NL/FR) with Companion App symptom diary integration.
 
 OFFICIAL UZA CLINICAL CASE EXAMPLES (`casus voorbeelden.docx`):
 - **Casus 1 (16yo Girl, Neuroblastoma, HR-NBL2 RAPID COJEC Induction, Cycle B4 = Vincristine + Cisplatin)**:
@@ -957,23 +764,27 @@ OFFICIAL UZA CLINICAL CASE EXAMPLES (`casus voorbeelden.docx`):
   * Action: Ensure full HEC Ondansetron 3x/d dosing (5 mg/m2 max 8 mg 3x/d) or switch to IV Palonosetron (never combined with Ondansetron within 3 days), verify 50% Dexamethasone dose reduction with Aprepitant, continue evening Olanzapine (rounded down to nearest 0.5 mg), and track breakthrough symptoms in the CINV Passport / Companion App.
 - **Casus 2 (2yo Boy, Acute Lymphoblastic Leukemia [ALL], ALLTogether1 Induction B, Day 8 = Vincristine + Daunorubicin)**:
   * Emetogenicity: Vincristine (Low) + Daunorubicin (MEC) -> Overall **MEC (Moderate Emetogenic)**.
-  * Action: Prescribe **Ondansetron (2x/d) + Aprepitant**. **STRICT CONTRAINDICATION: NO Dexamethasone (`GEEN Dexamethasone bij ALL`)** (also excluded in brain tumors, dinutuximab beta, and steroid-containing chemo regimens).
+  * Action: Prescribe **Ondansetron (2x/d) + Aprepitant**. **STRICT CONTRAINDICATION: NO Dexamethasone (`GEEN Dexamethasone bij ALL`)** (also excluded in brain tumors / hersentumoren, dinutuximab beta, AML, CAR-T, and steroid-containing chemo regimens).
 - **Casus 3 (Ewing Sarcoma Patient, iEuroEwing Alternating VDC/IE, 5-Day IE Cycle #3 = Ifosfamide + Etoposide)**:
   * Emetogenicity: Ifosfamide alone is MEC and Etoposide alone is LEC, **HOWEVER the combination of Ifosfamide + Etoposide is classified as HEC (High Emetogenic)** per both UZA July 2026 v2 ('Combinatie: Ifosfamide/Etoposide = HOOG EMETOGEEN') and POGO 250111 pediatric studies!
   * Prior cycles: Breakthrough nausea and vomiting on Day 4 of the 5-day IE course.
   * Action: Prescribe maximal HEC quadruple prophylaxis (**Ondansetron 3x/d + Dexamethasone + Aprepitant + Olanzapine**) and consider **extending Aprepitant onto Days 4 and 5** given the 5-day multi-day schedule and prior Day 4 nausea.
 
 MANDATORY WORKFLOW FOR CLINICAL REGIMEN REQUESTS:
-1. Call `classify_regimen_emetogenicity(chemo_drugs_list=...)` to determine the individual and overall POGO/UZA v2 emetogenic tier (High, Moderate, Low, Minimal), including multi-agent combination escalations (`Ifosfamide + Etoposide -> High`, `Cytarabine + Daunorubicin/Etoposide -> High`, `Cyclophosphamide + Anthracycline -> High`).
+1. Call `classify_regimen_emetogenicity(chemo_drugs_list=...)` to determine the individual and overall UZA v2 / POGO emetogenic tier (High, Moderate, Low, Minimal), including multi-agent combination escalations (`Ifosfamide + Etoposide -> High`, `Cytarabine + Daunorubicin/Etoposide -> High`, `Cyclophosphamide + Anthracycline -> High`).
 2. Call `get_pogo_guideline_recommendation(emetogenic_tier=..., age=..., route=...)` to retrieve the age-stratified baseline pediatric prophylaxis regimen.
-3. Call `check_ddi_interactions(primary_drugs=..., proposed_antiemetics=...)` including all chemotherapy agents AND concomitant medications (especially azole antifungals like voriconazole, posaconazole, fluconazole) alongside the proposed antiemetics to detect CYP3A4 interactions, dexamethasone dose reductions, vinca-azole neurotoxicity, and additive QTc prolongation.
+3. Call `check_ddi_interactions(primary_drugs=..., proposed_antiemetics=...)` including all chemotherapy agents AND concomitant medications (especially azole antifungals like voriconazole, posaconazole, fluconazole) alongside the proposed antiemetics.
 4. Call `calculate_risk_adjusted_regimen(base_regimen=..., patient_risk_factors=...)` to incorporate patient-specific risk factors (e.g., prior CINV, Day 2/Day 4 breakthrough nausea, 5-day multi-day IE regimen, anticipatory nausea/anxiety, CNS tumor/ALL steroid restriction, QTc risk, infant <6 months, or concomitant azoles).
+5. If patient weight and height are provided, call `compute_antiemetic_doses(antiemetics=..., weight_kg=..., height_cm=..., route=..., indication=..., age_years=...)` to compute exact mg and mL doses deterministically. NEVER calculate or invent mg or mL numbers yourself.
+6. Call `search_guidelines(query=...)` (using both English and Dutch terms, e.g., `"dexamethasone ALL GEEN dexamethasone"` or `"ifosfamide etoposide ondansetron"`) and cite retrieved passages as `[S1]`, `[S2]` with file and page number. Report UZA July 2026 v2 policy first, then whether POGO 250111 agrees.
+7. When a parent schedule or CINV Patient Passport is requested, call `build_parent_passport(language=..., chemo_days=...)` (`"en"`, `"nl"`, or `"fr"`).
 
 REGULATORY & SAFETY GUARDRAILS:
-- You are a non-autonomous clinical decision support tool. You NEVER place medication orders or prescribe directly.
-- Every clinical response MUST clearly display the exact banner:
+- Copy clinical numbers from deterministic tool results only. Never invent or calculate doses, volumes, BSA, or page numbers.
+- If `unverified_sources` in tool outputs is non-empty, note in one line that those reference table rows await final pharmacist verification.
+- Hard clinical blocks: NEVER recommend Dexamethasone in ALL, brain tumors (`hersentumoren`), Dinutuximab beta, AML, CAR-T, or steroid-containing chemotherapy (`GEEN Dexamethasone`). NEVER combine Palonosetron with Ondansetron within 3 days. Omit Aprepitant in infants <6 months or <=6 kg and Olanzapine in children <2 years.
+- Every clinical response MUST end with the exact banner:
   "Advisory Only — Requires Clinician Sign-Off"
-- Always provide transparent clinical reasoning and cite UZA July 2026 v2 and POGO / MASCC pediatric guidelines for every recommendation and dose modification.
 """
 
 root_agent = Agent(
@@ -981,7 +792,8 @@ root_agent = Agent(
     model=MODEL,
     description=(
         "AImesis: Pediatric Oncology Clinical Decision Support agent for CINV prophylaxis, "
-        "POGO/MASCC guideline alignment, CYP3A4/QTc DDI screening, and personalized risk adjustment."
+        "UZA v2 & POGO/MASCC guideline alignment, CYP3A4/QTc DDI screening, deterministic dosing, "
+        "page-level PDF citation, and multilingual CINV Parent Passport generation."
     ),
     instruction=SYSTEM_INSTRUCTION,
     tools=[
@@ -989,10 +801,31 @@ root_agent = Agent(
         check_ddi_interactions,
         get_pogo_guideline_recommendation,
         calculate_risk_adjusted_regimen,
+        compute_antiemetic_doses,
+        search_guidelines,
+        build_parent_passport,
     ],
+    after_model_callback=guard,
 )
 
 app = App(
     root_agent=root_agent,
     name="app",
 )
+
+__all__ = [
+    "ADVISORY_LABEL",
+    "MODEL",
+    "PEDIATRIC_CHEMO_EMETOGENICITY",
+    "UZA_CASUS_VOORBEELDEN",
+    "app",
+    "build_parent_passport",
+    "calculate_risk_adjusted_regimen",
+    "check_ddi_interactions",
+    "classify_regimen_emetogenicity",
+    "compute_antiemetic_doses",
+    "get_pogo_guideline_recommendation",
+    "guard",
+    "root_agent",
+    "search_guidelines",
+]

@@ -7,11 +7,18 @@ Agent generated with `agents-cli` version `1.5.0`
 
 ```
 uc3-aimesis-cinv/
-├── app/         # Core agent code
-│   ├── agent.py               # Main agent logic
-│   ├── fast_api_app.py        # FastAPI Backend server
-│   └── app_utils/             # App utilities and helpers
-├── tests/                     # Unit, integration, and load tests
+├── app/                       # Core agent code
+│   ├── agent.py               # Single root_agent (gemini-2.5-flash) & 7 tools
+│   ├── tables.py              # Verifiable clinical tables (UZA v2 + POGO 250111)
+│   ├── dosing.py              # Deterministic BSA, mg, rounding & mL dosing
+│   ├── guidelines.py          # Page-cited PDF guideline search
+│   ├── passport.py            # Multilingual (en/nl/fr) parent passport
+│   ├── guardrail.py           # Deterministic after_model_callback guardrail
+│   ├── fast_api_app.py        # FastAPI Backend server + ADK Web UI & A2A
+│   └── app_utils/             # A2A and telemetry helpers
+├── codelabs/                  # Official workshop codelab & guide
+├── docs/                      # Canonical UZA CINV v2 & POGO 250111 PDFs + casus
+├── tests/                     # Unit, integration, and eval tests
 ├── GEMINI.md                  # AI-assisted development guide
 └── pyproject.toml             # Project dependencies
 ```
