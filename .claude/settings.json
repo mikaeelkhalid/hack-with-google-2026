@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "f=$(jq -r \".tool_input.file_path // empty\"); case \"$f\" in \"$CLAUDE_PROJECT_DIR\"/codelabs/*|\"$CLAUDE_PROJECT_DIR\"/usecase/*|codelabs/*|usecase/*) echo \"{\\\"hookSpecificOutput\\\":{\\\"hookEventName\\\":\\\"PreToolUse\\\",\\\"permissionDecision\\\":\\\"deny\\\",\\\"permissionDecisionReason\\\":\\\"codelabs/ and usecase/ are read-only organizer reference material\\\"}}\";; esac"
+          }
+        ]
+      }
+    ]
+  }
+}

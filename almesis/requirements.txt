@@ -1,0 +1,12 @@
+google-adk
+google-genai
+google-cloud-bigquery
+google-cloud-discoveryengine
+google-cloud-firestore
+pandas
+db-dtypes
+pydantic>=2
+streamlit
+pypdf
+python-dotenv
+pytest

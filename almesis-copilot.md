@@ -1,10 +1,10 @@
-# AImesis Copilot 
+# Almesis Copilot 
 
 A guide to the whole project: what it is, how it works, and how to pitch it.
 
 ## The idea in one sentence
 
-A clinician types in a child's chemotherapy and basic details, and AImesis Copilot answers: how likely is this treatment to make the child sick, which anti-sickness medicines are recommended, what dose, whether any of the child's other medicines clash with them, and which guideline says so.
+A clinician types in a child's chemotherapy and basic details, and Almesis Copilot answers: how likely is this treatment to make the child sick, which anti-sickness medicines are recommended, what dose, whether any of the child's other medicines clash with them, and which guideline says so.
 
 ## The problem it solves
 
@@ -15,7 +15,7 @@ Chemotherapy often causes nausea and vomiting (CINV). Doctors prevent it with an
 - The anti-sickness medicines can clash with other medicines the child takes.
 - The guidelines are long documents, and the information is scattered.
 
-Today, clinicians search these documents by hand. AImesis puts it all in one place, in seconds, with the source shown.
+Today, clinicians search these documents by hand. Almesis puts it all in one place, in seconds, with the source shown.
 
 ## Think of it as a small expert team
 
@@ -68,7 +68,7 @@ The result always ends with: Decision support only. Requires clinician review. T
 
 Everything runs in European regions, which matters for Belgian hospitals.
 
-![Alt text](media/aimesis_copilot_architecture_v2.png)
+![Alt text](media/almesis_copilot_architecture_v2.png)
 
 ## The bonus feature: reading protocols
 
