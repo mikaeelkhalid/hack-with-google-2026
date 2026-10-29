@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>UC3 Quickstart: AImesis Pediatric CINV Clinical Decision Support &amp; Patient Passport (UZA Policy v2) · Solve with Google: BSPHO 2026</title>
+  <style>
+    :root {
+      --accent: #e37400;
+      --accent-050: #e8f0fe;
+      --bg: #f8f9fa;
+      --surface: #ffffff;
+      --surface-2: #f1f3f4;
+      --ink: #202124;
+      --ink-2: #3c4043;
+      --muted: #5f6368;
+      --border: #dadce0;
+      --font: 'Google Sans', Roboto, system-ui, -apple-system, sans-serif;
+      --mono: 'Roboto Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: var(--font); background: var(--bg); color: var(--ink); font-size: 15px; line-height: 1.6; }
+    .topbar { position: sticky; top: 0; z-index: 40; display: flex; align-items: center; gap: 16px; height: 68px; padding: 0 28px; background: var(--surface); border-bottom: 1px solid var(--border); }
+    .topbar .title { font-size: 17px; font-weight: 600; }
+    .topbar .sub { font-size: 12.5px; color: var(--muted); }
+    .topbar .spacer { flex: 1; }
+    .nav-pills { display: flex; gap: 8px; }
+    .nav-pills a { text-decoration: none; font-size: 12.5px; font-weight: 500; padding: 6px 12px; border-radius: 999px; border: 1px solid var(--border); color: var(--ink-2); background: var(--surface); }
+    .nav-pills a.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+    .app { display: grid; grid-template-columns: 290px minmax(0, 1fr); gap: 26px; max-width: 1400px; margin: 0 auto; padding: 24px 28px 64px; align-items: start; }
+    .rail-left { position: sticky; top: 90px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; }
+    .progress-track { height: 6px; background: var(--surface-2); border-radius: 99px; overflow: hidden; margin: 8px 0 14px; }
+    .progress-fill { height: 100%; width: 0%; background: var(--accent); transition: width .3s ease; }
+    .steps { list-style: none; margin: 0; padding: 0; }
+    .step { display: flex; align-items: flex-start; gap: 10px; padding: 9px 10px; border-radius: 8px; cursor: pointer; }
+    .step:hover { background: var(--surface-2); }
+    .step.active { background: var(--accent-050); font-weight: 600; }
+    .marker { width: 24px; height: 24px; border-radius: 50%; background: var(--surface-2); display: inline-flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; flex: 0 0 auto; }
+    .step.active .marker { background: var(--accent); color: #fff; }
+    .label .t { display: block; font-size: 13.5px; line-height: 1.3; }
+    .label .s { display: block; font-size: 11.5px; color: var(--muted); }
+    .section { display: none; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 28px 32px; }
+    .section.is-active { display: block; }
+    .eyebrow { font-size: 11.5px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--accent); }
+    .sec-head h2 { margin: 4px 0 18px; font-size: 24px; }
+    h3 { margin: 22px 0 10px; font-size: 17px; }
+    code { font-family: var(--mono); font-size: 13px; background: var(--surface-2); padding: 2px 5px; border-radius: 4px; }
+    .codebox { margin: 14px 0; border-radius: 10px; overflow: hidden; border: 1px solid #2d3139; background: #1e222a; color: #e8eaed; }
+    .codebox-head { display: flex; justify-content: space-between; align-items: center; padding: 8px 14px; background: #282c34; font-size: 11.5px; font-family: var(--mono); color: #9aa0a6; }
+    .copy-btn { background: #3c4043; color: #fff; border: none; border-radius: 6px; padding: 4px 10px; font-size: 12px; cursor: pointer; }
+    .copy-btn:hover { background: var(--accent); }
+    pre.code { margin: 0; padding: 14px 16px; overflow-x: auto; font-family: var(--mono); font-size: 13px; line-height: 1.5; }
+    pre.code code { background: none; padding: 0; color: inherit; }
+    .callout { padding: 14px 16px; border-radius: 8px; margin: 16px 0; border-left: 4px solid var(--accent); background: var(--accent-050); }
+    .callout.good { border-left-color: #1e8e3e; background: #e6f4ea; }
+    .callout.warn { border-left-color: #e37400; background: #fef7e0; }
+    .main-footer { display: flex; align-items: center; gap: 12px; margin-top: 28px; padding-top: 18px; border-top: 1px solid var(--border); }
+    .fspacer { flex: 1; }
+    .btn { font-family: var(--font); font-size: 14px; font-weight: 500; padding: 9px 18px; border-radius: 999px; cursor: pointer; border: 1px solid var(--border); background: var(--surface); color: var(--ink-2); text-decoration: none; }
+    .btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+    .btn:disabled { opacity: .4; cursor: not-allowed; }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div>
+      <div class="title">UC3 Quickstart: AImesis Pediatric CINV Clinical Decision Support &amp; Patient Passport (UZA Policy v2)</div>
+      <div class="sub">Track 3 · UZA · Katleen Balliauw, Anthe De Pauw &amp; Payam Ebrahimi</div>
+    </div>
+    <div class="spacer"></div>
+    <nav class="nav-pills">
+      <a href="/getting-started">Hub Quickstart</a>
+      <a href="/codelab/uc1" class="">UC1</a>
+      <a href="/codelab/uc2" class="">UC2</a>
+      <a href="/codelab/uc3" class="active">UC3</a>
+      <a href="/codelab/uc4" class="">UC4</a>
+    </nav>
+  </header>
+  <div class="app">
+    <aside class="rail-left">
+      <div style="font-size:12px;font-weight:600;color:var(--muted);">CODELAB PROGRESS (<span id="progressPct">0%</span>)</div>
+      <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+      <ol class="steps" id="stepsList">
+        <li class="step active" data-idx="0"><span class="marker"><span class="num">1</span></span><div class="label"><span class="t">Introduction &amp; Clinical Challenge</span><span class="s">Duration: 02:00</span></div></li><li class="step" data-idx="1"><span class="marker"><span class="num">2</span></span><div class="label"><span class="t">Environment &amp; UZA Policy v2 + POGO 250111 Dataset Setup</span><span class="s">Duration: 03:00</span></div></li><li class="step" data-idx="2"><span class="marker"><span class="num">3</span></span><div class="label"><span class="t">Stories 1–3: UZA v2 Dose-Dependent Emetogenicity, Olanzapine Floor Rounding &amp; &quot;GEEN Dexamethasone&quot;</span><span class="s">Duration: 06:00</span></div></li><li class="step" data-idx="3"><span class="marker"><span class="num">4</span></span><div class="label"><span class="t">Story 4 &amp; Story 5: Multilingual CINV Patient Passport &amp; Literature Cross-Check</span><span class="s">Duration: 06:00</span></div></li><li class="step" data-idx="4"><span class="marker"><span class="num">5</span></span><div class="label"><span class="t">Negative Safety Testing: Voriconazole + Vincristine CYP3A4 Block &amp; Cumulative QTc</span><span class="s">Duration: 04:00</span></div></li><li class="step" data-idx="5"><span class="marker"><span class="num">6</span></span><div class="label"><span class="t">Verification &amp; Jury Showcase Checklist</span><span class="s">Duration: 02:00</span></div></li>
+      </ol>
+    </aside>
+    <main>
+<section class="section is-active" data-sec="0"><div class="sec-head"><span class="eyebrow">STEP 1 OF 6 · DURATION 02:00</span><h2>Introduction &amp; Clinical Challenge</h2></div><p>Welcome to <strong>Use Case 3 (AImesis: Pediatric CINV Control)</strong> at <strong>Solve with Google: BSPHO 2026 (Wintercircus Ghent)</strong>.</p>
+<p>Chemotherapy-Induced Nausea and Vomiting (<strong>CINV</strong>) is one of the most distressing treatment toxicities for children with cancer. At <strong>UZA (University Hospital Antwerp — Koningin Mathilde Moeder- en kindcentrum)</strong>, Hospital Pharmacists <strong>Katleen Balliauw &amp; Anthe De Pauw</strong> have grounded pediatric antiemetic prophylaxis in <strong><code>Anti-emetica beleid CINV - V2.pdf</code> (July 2026 v2)</strong>, the <strong>87-page POGO Emetogenicity Classification Guideline (<code>POGO Emetogenicity Classification Guideline Final-rev- 250111.pdf</code>)</strong>, <strong>3 real-world clinical case examples (<code>casus voorbeelden.docx</code>)</strong>, and <strong>6 official clinical user stories (<code>user stories AImesis version 2.pdf</code>)</strong>:</p>
+<ul>
+<li><strong>Story 1 (Risk Classification &amp; Combination Escalation)</strong>: Classify acute emetogenicity (<code>Minimal</code>, <code>Low</code>, <code>Moderate</code>, <code>High</code>) using UZA&#x27;s <strong>dose-dependent thresholds</strong> (<code>Cyclophosphamide &gt;1500 mg/m²</code> = High; <code>Cytarabine &gt;=3 g/m²</code> = High; <code>MTX &gt;=12 g/m²</code> = High; <code>Carboplatin</code> and <code>Doxorubicin</code> = UZA High) and <strong>combination elevation rules</strong> (including <strong><code>Ifosfamide [MEC] + Etoposide [LEC] -&gt; High [HEC]</code></strong> per UZA v2 &amp; POGO 250111, as demonstrated in <strong>Casus 3</strong>).</li>
+<li><strong>Story 2 (Prophylaxis &amp; Hard Contraindications)</strong>: Recommend exact weight/BSA-adjusted doses (<code>Ondansetron 5 mg/m² max 8 mg</code>, <code>Aprepitant</code>, <code>Dexamethasone</code> split at <code>BSA 0.6 m²</code> with the <strong>IV <code>Aacidexam® 5 mg/mL = ±4 mg/mL</code> active base alert</strong>, and <strong><code>Olanzapine 0.1 mg/kg</code> rounded DOWN to the nearest <code>0.5 mg</code></strong>) while enforcing <strong>&quot;GEEN Dexamethasone&quot;</strong> in <strong>ALL (Casus 2)</strong>, <strong>Brain Tumors (<code>hersentumoren</code>)</strong>, <strong>Dinutuximab beta</strong>, and steroid-containing chemo regimens.</li>
+<li><strong>Story 3 (Patient Risk Personalization, EHR Nausea History &amp; Breakthrough CINV)</strong>: Screen prior cycles (e.g., ward progress notes / <code>toernota</code> in <strong>Casus 1</strong> &amp; <strong>Casus 3</strong>), adjust formulations (liquid/syrup vs tablet vs NG tube vs IV), and step up prophylaxis (<code>Ondansetron 2x/d -&gt; 3x/d</code> or <code>Palonosetron</code> switch in <strong>Casus 1</strong>; extending <code>Aprepitant</code> onto Days 4–5 for 5-day multi-day <code>IE</code> chemo in <strong>Casus 3</strong>).</li>
+<li><strong>Story 4 (Multilingual CINV Patient Passport &amp; Bonus Companion App)</strong>: Generate an actionable family schedule (<code>NL</code>/<code>FR</code>/<code>EN</code>) with curated Belgian hospital contact links (<code>CINV resources in Belgium.xlsx</code>) plus a <strong>bonus Companion App tracker</strong> where parents/patients can log each instance of nausea with a single button tap.</li>
+<li><strong>Story 5 &amp; 6 (UZA v2 vs. POGO 250111 Literature Cross-Check &amp; CYP3A4/QTc DDI Screening)</strong>: Compare UZA&#x27;s July 2026 v2 policy with the POGO 250111 guideline side-by-side and flag lethal CYP3A4/QTc interactions.</li>
+</ul>
+<h3>Official UZA Clinical Case Examples (<code>casus voorbeelden.docx</code>)</h3>
+<ul>
+<li><strong>Casus 1 (16yo girl, Neuroblastoma — HR-NBL2 RAPID COJEC Cycle B4)</strong>: <code>Vincristine</code> (Low) + <code>Cisplatin</code> (High) = <strong>HEC</strong>. Had Day 2 breakthrough nausea in prior Cycle B3 (05/09) on Ondansetron 2x/d + Aprepitant + Dexamethasone + Olanzapine $\rightarrow$ step up Ondansetron to 3x/d (or switch to IV Palonosetron) + track in Companion App.</li>
+<li><strong>Casus 2 (2yo boy, ALL — ALLTogether1 Induction B Day 8)</strong>: <code>Vincristine</code> (Low) + <code>Daunorubicin</code> (MEC) = <strong>MEC</strong> $\rightarrow$ <strong>Ondansetron + Aprepitant</strong>. <strong>STRICT BLOCK: <code>GEEN Dexamethasone bij ALL</code>!</strong></li>
+<li><strong>Casus 3 (Ewing Sarcoma — iEuroEwing 5-Day IE Cycle #3)</strong>: 5-day multi-day <code>Ifosfamide</code> (MEC) + <code>Etoposide</code> (LEC) $\rightarrow$ <strong>Combination = HEC</strong> (per UZA v2 &amp; POGO 250111). Had Day 4 breakthrough nausea in prior cycles $\rightarrow$ maximal HEC quadruple prophylaxis + consider extending Aprepitant onto Days 4 and 5.</li>
+</ul>
+<pre class="code mermaid-box"><code>flowchart LR
+    Chemo[&quot;Chemotherapy Regimen + Dose (mg/m2) + Diagnosis&quot;] --&gt; Tier[&quot;Story 1: UZA v2 &amp; POGO 250111 Emetogenicity + Combo Rules&quot;]
+    Tier --&gt; DexGuard{&quot;ALL (Casus 2) / Brain Tumor / Dinutuximab beta / Steroid Chemo?&quot;}
+    DexGuard -- &quot;Yes&quot; --&gt; NoDex[&quot;HARD BLOCK: GEEN Dexamethasone&quot;]
+    DexGuard -- &quot;No&quot; --&gt; Dose[&quot;Story 2 &amp; 3: Ondansetron + Aprepitant + Dex (Aacidexam 4mg/mL) + Olanzapine (0.5mg floor)&quot;]
+    NoDex --&gt; Dose
+    Dose --&gt; Passport[&quot;Story 4-6: CINV Patient Passport + Companion App + POGO 250111 Literature Diff&quot;]</code></pre>
+<div class="callout good"><div class="body"><strong>Clinical Leads &amp; CE POC</strong>: Katleen Balliauw &amp; Anthe De Pauw (Hospital Pharmacists, UZA) &amp; Payam Ebrahimi (<code>@payame</code>, Google Cloud).</div></div><div class="main-footer"><button class="btn" type="button" data-back disabled>← Back</button><div class="fspacer"></div><span class="footer-count">Step 1 of 6</span><button class="btn primary" type="button" data-next>Next Step →</button></div></section><section class="section" data-sec="1"><div class="sec-head"><span class="eyebrow">STEP 2 OF 6 · DURATION 03:00</span><h2>Environment &amp; UZA Policy v2 + POGO 250111 Dataset Setup</h2></div><p>Verify that all 7 official UC3 files (<code>Anti-emetica beleid CINV - V2.pdf</code>, <code>POGO Emetogenicity Classification Guideline Final-rev- 250111.pdf</code>, <code>casus voorbeelden.docx</code>, <code>user stories AImesis version 2.pdf</code>, <code>AImesis_pediatric CINVcontrol clinical decision support .pptx</code>, <code>Pitch slides AImesis versie 2 .pptx</code>, and <code>CINV resources in Belgium.xlsx</code>) are synced into your workspace:</p>
+<div class="codebox"><div class="codebox-head"><span class="code-lang">BASH</span><button class="copy-btn" type="button" data-code="export PROJECT_ID=$(gcloud config get-value project)
+mkdir -p /config/Desktop/use-cases
+
+gcloud storage cp -r &quot;gs://use-cases-${PROJECT_ID}/3. AImesis CINV Control&quot; /config/Desktop/use-cases/ 2&gt;/dev/null || \
+  gcloud storage cp -r &quot;gs://swg-workshop/use-case/3. AImesis CINV Control&quot; /config/Desktop/use-cases/
+
+ls -lh &quot;/config/Desktop/use-cases/3. AImesis CINV Control/&quot;">Copy</button></div><pre class="code"><code>export PROJECT_ID=$(gcloud config get-value project)
+mkdir -p /config/Desktop/use-cases
+
+gcloud storage cp -r &quot;gs://use-cases-${PROJECT_ID}/3. AImesis CINV Control&quot; /config/Desktop/use-cases/ 2&gt;/dev/null || \
+  gcloud storage cp -r &quot;gs://swg-workshop/use-case/3. AImesis CINV Control&quot; /config/Desktop/use-cases/
+
+ls -lh &quot;/config/Desktop/use-cases/3. AImesis CINV Control/&quot;</code></pre></div>
+<p>You should see output similar to:</p>
+<div class="codebox"><div class="codebox-head"><span class="code-lang">CONSOLE</span></div><pre class="code"><code>AImesis_pediatric CINVcontrol clinical decision support .pptx
+Anti-emetica beleid CINV - V2.pdf
+CINV resources in Belgium.xlsx
+POGO Emetogenicity Classification Guideline Final-rev- 250111.pdf
+Pitch slides AImesis versie 2 .pptx
+casus voorbeelden.docx
+user stories AImesis version 2.pdf</code></pre></div><div class="main-footer"><button class="btn" type="button" data-back>← Back</button><div class="fspacer"></div><span class="footer-count">Step 2 of 6</span><button class="btn primary" type="button" data-next>Next Step →</button></div></section><section class="section" data-sec="2"><div class="sec-head"><span class="eyebrow">STEP 3 OF 6 · DURATION 06:00</span><h2>Stories 1–3: UZA v2 Dose-Dependent Emetogenicity, Olanzapine Floor Rounding &amp; &quot;GEEN Dexamethasone&quot;</h2></div><p>Let&#x27;s test <code>evaluate_uza_cinv_policy_v2</code> across a High-Risk regimen (<code>Cisplatin</code> + <code>Doxorubicin</code>) and verify:</p>
+<ol>
+<li><code>Olanzapine</code> (<code>0.1 mg/kg</code> on an <code>18.9 kg</code> child = <code>1.89 mg</code> raw) is <strong>rounded DOWN to the nearest <code>0.5 mg</code> (<code>1.5 mg</code>)</strong>.</li>
+<li>The IV <code>Aacidexam® 5 mg/mL = ±4 mg/mL</code> active dexamethasone base conversion warning is included.</li>
+<li>Passing <code>diagnosis=&quot;ALL&quot;</code> or <code>diagnosis=&quot;Brain tumor (medulloblastoma)&quot;</code> triggers <strong><code>GEEN_DEXAMETHASONE_CONTRAINDICATION</code></strong>.</li>
+</ol>
+<div class="codebox"><div class="codebox-head"><span class="code-lang">BASH</span><button class="copy-btn" type="button" data-code="cat &lt;&lt; &#x27;EOF&#x27; &gt; test_uc3_uza_policy.py
+from agents.uc3_aimesis.agent import (
+    evaluate_uza_cinv_policy_v2,
+    generate_cinv_patient_passport,
+)
+
+# 1. High-risk solid tumor (Osteosarcoma: Cisplatin + Doxorubicin, 18.9 kg, BSA 0.76 m2)
+res_solid = evaluate_uza_cinv_policy_v2(
+    drug_list=[&quot;cisplatin&quot;, &quot;doxorubicin&quot;],
+    patient_age_years=6.0,
+    patient_weight_kg=18.9,
+    bsa_m2=0.76,
+    drug_doses_mg_m2={&quot;cisplatin&quot;: 60.0, &quot;doxorubicin&quot;: 37.5},
+    indication=&quot;osteosarcoma&quot;,
+    can_swallow_tablets=False,
+    anticipatory_vomiting=True,
+)
+print(&quot;Solid Tumor Tier:&quot;, res_solid[&quot;overall_tier&quot;])
+print(&quot;Olanzapine Schedule (18.9 kg * 0.1 mg/kg = 1.89 -&gt; floor 1.5 mg):&quot;, res_solid[&quot;dosing_schedule&quot;][&quot;olanzapine&quot;])
+print(&quot;Dexamethasone Schedule &amp; Aacidexam Alert:&quot;, res_solid[&quot;dosing_schedule&quot;][&quot;dexamethasone&quot;])
+
+# 2. Brain tumor / ALL — verify mandatory &quot;GEEN Dexamethasone&quot; block
+res_brain = evaluate_uza_cinv_policy_v2(
+    drug_list=[&quot;cyclophosphamide&quot;],
+    patient_age_years=9.0,
+    patient_weight_kg=28.0,
+    bsa_m2=1.02,
+    drug_doses_mg_m2={&quot;cyclophosphamide&quot;: 1800.0},
+    indication=&quot;brain_tumor&quot;,
+    can_swallow_tablets=False,
+    anticipatory_vomiting=True,
+)
+print(&quot;\nBrain Tumor Tier (Cyclophosphamide 1800 mg/m2):&quot;, res_brain[&quot;overall_tier&quot;])
+print(&quot;Dexamethasone Contraindicated?:&quot;, res_brain[&quot;dexamethasone_contraindicated&quot;])
+print(&quot;Dexamethasone Rule:&quot;, res_brain[&quot;dosing_schedule&quot;][&quot;dexamethasone&quot;])
+EOF
+python3 test_uc3_uza_policy.py
+rm -f test_uc3_uza_policy.py">Copy</button></div><pre class="code"><code>cat &lt;&lt; &#x27;EOF&#x27; &gt; test_uc3_uza_policy.py
+from agents.uc3_aimesis.agent import (
+    evaluate_uza_cinv_policy_v2,
+    generate_cinv_patient_passport,
+)
+
+# 1. High-risk solid tumor (Osteosarcoma: Cisplatin + Doxorubicin, 18.9 kg, BSA 0.76 m2)
+res_solid = evaluate_uza_cinv_policy_v2(
+    drug_list=[&quot;cisplatin&quot;, &quot;doxorubicin&quot;],
+    patient_age_years=6.0,
+    patient_weight_kg=18.9,
+    bsa_m2=0.76,
+    drug_doses_mg_m2={&quot;cisplatin&quot;: 60.0, &quot;doxorubicin&quot;: 37.5},
+    indication=&quot;osteosarcoma&quot;,
+    can_swallow_tablets=False,
+    anticipatory_vomiting=True,
+)
+print(&quot;Solid Tumor Tier:&quot;, res_solid[&quot;overall_tier&quot;])
+print(&quot;Olanzapine Schedule (18.9 kg * 0.1 mg/kg = 1.89 -&gt; floor 1.5 mg):&quot;, res_solid[&quot;dosing_schedule&quot;][&quot;olanzapine&quot;])
+print(&quot;Dexamethasone Schedule &amp; Aacidexam Alert:&quot;, res_solid[&quot;dosing_schedule&quot;][&quot;dexamethasone&quot;])
+
+# 2. Brain tumor / ALL — verify mandatory &quot;GEEN Dexamethasone&quot; block
+res_brain = evaluate_uza_cinv_policy_v2(
+    drug_list=[&quot;cyclophosphamide&quot;],
+    patient_age_years=9.0,
+    patient_weight_kg=28.0,
+    bsa_m2=1.02,
+    drug_doses_mg_m2={&quot;cyclophosphamide&quot;: 1800.0},
+    indication=&quot;brain_tumor&quot;,
+    can_swallow_tablets=False,
+    anticipatory_vomiting=True,
+)
+print(&quot;\nBrain Tumor Tier (Cyclophosphamide 1800 mg/m2):&quot;, res_brain[&quot;overall_tier&quot;])
+print(&quot;Dexamethasone Contraindicated?:&quot;, res_brain[&quot;dexamethasone_contraindicated&quot;])
+print(&quot;Dexamethasone Rule:&quot;, res_brain[&quot;dosing_schedule&quot;][&quot;dexamethasone&quot;])
+EOF
+python3 test_uc3_uza_policy.py
+rm -f test_uc3_uza_policy.py</code></pre></div>
+<p>You should see output similar to:</p>
+<div class="codebox"><div class="codebox-head"><span class="code-lang">CONSOLE</span></div><pre class="code"><code>Solid Tumor Tier: High
+Olanzapine Schedule (18.9 kg * 0.1 mg/kg = 1.89 -&gt; floor 1.5 mg): 1.5 mg PO 1x/day (0.1 mg/kg = 1.89 mg rounded DOWN to nearest 0.5 mg)
+Dexamethasone Schedule &amp; Aacidexam Alert: ... (IV Aacidexam 5 mg/mL = 4 mg/mL base alert)
+
+Brain Tumor Tier (Cyclophosphamide 1800 mg/m2): High
+Dexamethasone Contraindicated?: True
+Dexamethasone Rule: CONTRAINDICATED (GEEN Dexamethasone — UZA Policy v2)</code></pre></div>
+<div class="callout warn"><div class="body"><strong>Critical Clinical Safety Rule</strong>: Never recommend Dexamethasone for CINV in children with <strong>ALL</strong> (interferes with leukemia steroid backbone), <strong>Brain Tumors</strong> (alters blood-brain barrier permeability and chemotherapy penetration), or <strong>Dinutuximab beta</strong> immunotherapy (blunts ADCC immune response).</div></div><div class="main-footer"><button class="btn" type="button" data-back>← Back</button><div class="fspacer"></div><span class="footer-count">Step 3 of 6</span><button class="btn primary" type="button" data-next>Next Step →</button></div></section><section class="section" data-sec="3"><div class="sec-head"><span class="eyebrow">STEP 4 OF 6 · DURATION 06:00</span><h2>Story 4 &amp; Story 5: Multilingual CINV Patient Passport &amp; Literature Cross-Check</h2></div><p>Parents discharged home after chemotherapy need a clear, jargon-free daily schedule (<strong>Story 4: CINV Patient Passport</strong>) with red-flag dehydration signs and direct links to verified Belgian hospital brochures (avoiding the <em>&quot;Brussels Bilingual Redirection Loop&quot;</em> documented in <code>CINV resources in Belgium.xlsx</code>).</p>
+<h3>Generate the CINV Patient Passport &amp; Run the ADK Agent</h3>
+<div class="codebox"><div class="codebox-head"><span class="code-lang">BASH</span><button class="copy-btn" type="button" data-code="cat &lt;&lt; &#x27;EOF&#x27; &gt; test_uc3_passport.py
+from agents.uc3_aimesis.agent import (
+    evaluate_uza_cinv_policy_v2,
+    generate_cinv_patient_passport,
+)
+
+uza_eval = evaluate_uza_cinv_policy_v2(
+    drug_list=[&quot;cyclophosphamide&quot;],
+    patient_age_years=9.0,
+    patient_weight_kg=28.0,
+    bsa_m2=1.02,
+    drug_doses_mg_m2={&quot;cyclophosphamide&quot;: 1800.0},
+    indication=&quot;brain_tumor&quot;,
+)
+passport = generate_cinv_patient_passport(
+    patient_alias=&quot;Lucas (9y)&quot;,
+    uza_evaluation=uza_eval,
+    ddi_alerts=[],
+    qtc_assessment={&quot;risk_tier&quot;: &quot;LOW&quot;, &quot;cumulative_score&quot;: 0},
+)
+print(&quot;Passport Patient:&quot;, passport[&quot;patient_alias&quot;], &quot;| Tier:&quot;, passport[&quot;emetogenicity_tier&quot;])
+print(&quot;Dexamethasone Blocked:&quot;, passport[&quot;dexamethasone_blocked&quot;])
+print(&quot;Belgian Family Resources Count:&quot;, len(passport[&quot;belgian_family_resources&quot;]))
+EOF
+python3 test_uc3_passport.py
+rm -f test_uc3_passport.py
+
+# Run full UC3 ADK agent (including Story 5 UZA v2 vs POGO comparison)
+./bin/swg-ctl agents run \
+  --agent uc3_aimesis \
+  --query &quot;7yo patient at UZA (22 kg, BSA 0.85 m2) with ALL receiving Cyclophosphamide 1600 mg/m2 and Vincristine alongside Voriconazole antifungal prophylaxis. Provide UZA v2 CINV prophylaxis, check CYP3A4/QTc interactions, compare UZA v2 vs POGO, and generate a Dutch Patient Passport.&quot;">Copy</button></div><pre class="code"><code>cat &lt;&lt; &#x27;EOF&#x27; &gt; test_uc3_passport.py
+from agents.uc3_aimesis.agent import (
+    evaluate_uza_cinv_policy_v2,
+    generate_cinv_patient_passport,
+)
+
+uza_eval = evaluate_uza_cinv_policy_v2(
+    drug_list=[&quot;cyclophosphamide&quot;],
+    patient_age_years=9.0,
+    patient_weight_kg=28.0,
+    bsa_m2=1.02,
+    drug_doses_mg_m2={&quot;cyclophosphamide&quot;: 1800.0},
+    indication=&quot;brain_tumor&quot;,
+)
+passport = generate_cinv_patient_passport(
+    patient_alias=&quot;Lucas (9y)&quot;,
+    uza_evaluation=uza_eval,
+    ddi_alerts=[],
+    qtc_assessment={&quot;risk_tier&quot;: &quot;LOW&quot;, &quot;cumulative_score&quot;: 0},
+)
+print(&quot;Passport Patient:&quot;, passport[&quot;patient_alias&quot;], &quot;| Tier:&quot;, passport[&quot;emetogenicity_tier&quot;])
+print(&quot;Dexamethasone Blocked:&quot;, passport[&quot;dexamethasone_blocked&quot;])
+print(&quot;Belgian Family Resources Count:&quot;, len(passport[&quot;belgian_family_resources&quot;]))
+EOF
+python3 test_uc3_passport.py
+rm -f test_uc3_passport.py
+
+# Run full UC3 ADK agent (including Story 5 UZA v2 vs POGO comparison)
+./bin/swg-ctl agents run \
+  --agent uc3_aimesis \
+  --query &quot;7yo patient at UZA (22 kg, BSA 0.85 m2) with ALL receiving Cyclophosphamide 1600 mg/m2 and Vincristine alongside Voriconazole antifungal prophylaxis. Provide UZA v2 CINV prophylaxis, check CYP3A4/QTc interactions, compare UZA v2 vs POGO, and generate a Dutch Patient Passport.&quot;</code></pre></div>
+<p>You should see output similar to:</p>
+<div class="codebox"><div class="codebox-head"><span class="code-lang">CONSOLE</span></div><pre class="code"><code>Passport Patient: Lucas (9y) | Tier: High
+Dexamethasone Blocked: True
+Belgian Family Resources Count: 5</code></pre></div><div class="main-footer"><button class="btn" type="button" data-back>← Back</button><div class="fspacer"></div><span class="footer-count">Step 4 of 6</span><button class="btn primary" type="button" data-next>Next Step →</button></div></section><section class="section" data-sec="4"><div class="sec-head"><span class="eyebrow">STEP 5 OF 6 · DURATION 04:00</span><h2>Negative Safety Testing: Voriconazole + Vincristine CYP3A4 Block &amp; Cumulative QTc</h2></div><p>Verify that <code>screen_cyp3a4_and_qtc_interactions</code> flags the <strong>severe CYP3A4 inhibition</strong> between <code>Voriconazole</code> (or <code>Posaconazole</code>) and <code>Vincristine</code> (risk of severe peripheral neuropathy and paralytic ileus) as well as cumulative QTc prolongation when combining <code>Ondansetron</code> + <code>Domperidone</code> / <code>Haloperidol</code>.</p>
+<div class="codebox"><div class="codebox-head"><span class="code-lang">BASH</span><button class="copy-btn" type="button" data-code="pytest use_cases/03_aimesis/tests/ tests/test_swg_platform.py -k &quot;uc3 or aimesis&quot; -v">Copy</button></div><pre class="code"><code>pytest use_cases/03_aimesis/tests/ tests/test_swg_platform.py -k &quot;uc3 or aimesis&quot; -v</code></pre></div>
+<p>You should see output similar to:</p>
+<div class="codebox"><div class="codebox-head"><span class="code-lang">CONSOLE</span></div><pre class="code"><code>============================== passed in 0.44s ==============================</code></pre></div><div class="main-footer"><button class="btn" type="button" data-back>← Back</button><div class="fspacer"></div><span class="footer-count">Step 5 of 6</span><button class="btn primary" type="button" data-next>Next Step →</button></div></section><section class="section" data-sec="5"><div class="sec-head"><span class="eyebrow">STEP 6 OF 6 · DURATION 02:00</span><h2>Verification &amp; Jury Showcase Checklist</h2></div><h3>3-Minute Wintercircus Jury Demo Tips</h3>
+<ul>
+<li><strong>Show Dose-Dependent Escalation (Story 1)</strong>: Show <code>Cyclophosphamide 1000 mg/m²</code> (<code>Moderate</code>) stepping up to <code>High</code> at <code>1600 mg/m²</code>, or <code>2x Moderate</code> agents combining to <code>High</code>.</li>
+<li><strong>Trigger &quot;GEEN Dexamethasone&quot; &amp; <code>Olanzapine 0.5 mg</code> Floor Rounding (Story 2)</strong>: Demonstrate the hard block on Dexamethasone in ALL / Brain Tumors / Dinutuximab beta and show <code>18.9 kg * 0.1 mg/kg = 1.89 mg -&gt; 1.5 mg</code> floor rounding.</li>
+<li><strong>Display the Story 4 Patient Passport &amp; Story 5 Literature Diff</strong>: Show the family-ready Dutch/French passport side-by-side with the clinician&#x27;s UZA v2 vs. POGO comparison table.</li>
+</ul><div class="main-footer"><button class="btn" type="button" data-back>← Back</button><div class="fspacer"></div><span class="footer-count">Step 6 of 6</span><a class="btn primary" href="/use-cases">Finish Quickstart ✓</a></div></section>
+    </main>
+  </div>
+  <script>
+    var step = 0;
+    var total = 6;
+    var sections = document.querySelectorAll(".section");
+    var stepEls = document.querySelectorAll("#stepsList .step");
+    var progressFill = document.getElementById("progressFill");
+    var progressPct = document.getElementById("progressPct");
+    function go(idx) {
+      if (idx < 0 || idx >= total) return;
+      step = idx;
+      sections.forEach(function(s, i) { s.classList.toggle("is-active", i === idx); });
+      stepEls.forEach(function(li, i) { li.classList.toggle("active", i === idx); });
+      var pct = total > 1 ? Math.round((idx / (total - 1)) * 100) : 100;
+      progressFill.style.width = pct + "%";
+      progressPct.textContent = pct + "%";
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+    stepEls.forEach(function(li) {
+      li.addEventListener("click", function() { go(parseInt(li.getAttribute("data-idx"), 10)); });
+    });
+    document.querySelectorAll("[data-next]").forEach(function(b) {
+      b.addEventListener("click", function() { go(step + 1); });
+    });
+    document.querySelectorAll("[data-back]").forEach(function(b) {
+      b.addEventListener("click", function() { go(step - 1); });
+    });
+    document.querySelectorAll(".copy-btn").forEach(function(btn) {
+      btn.addEventListener("click", function() {
+        var code = btn.getAttribute("data-code");
+        navigator.clipboard.writeText(code);
+        var old = btn.textContent;
+        btn.textContent = "Copied!";
+        setTimeout(function() { btn.textContent = old; }, 1500);
+      });
+    });
+  </script>
+</body>
+</html>
