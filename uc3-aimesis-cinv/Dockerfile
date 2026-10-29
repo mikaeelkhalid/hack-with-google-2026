@@ -22,6 +22,7 @@ COPY ./pyproject.toml ./README.md ./uv.lock* ./
 
 COPY ./app ./app
 COPY ./docs ./docs
+COPY ./.streamlit ./.streamlit
 
 RUN uv sync --frozen
 
