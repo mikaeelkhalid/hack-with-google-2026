@@ -2,6 +2,10 @@
 
 **Solve with Google: BSPHO 2026 — Use Case 3 (UZA Pediatric Oncology)**
 
+**Live Cloud Run Deployment (`europe-west1`)**: [https://uc3-aimesis-cinv-745357398105.europe-west1.run.app/](https://uc3-aimesis-cinv-745357398105.europe-west1.run.app/)
+- **Clinical & Parent Passport UI**: [https://uc3-aimesis-cinv-745357398105.europe-west1.run.app/ui/](https://uc3-aimesis-cinv-745357398105.europe-west1.run.app/ui/)
+- **ADK Developer Trace UI**: [https://uc3-aimesis-cinv-745357398105.europe-west1.run.app/dev-ui/](https://uc3-aimesis-cinv-745357398105.europe-west1.run.app/dev-ui/)
+
 > **Clinical Safety Notice**: Uses synthetic pediatric oncology data only. Non-autonomous clinical decision support — every recommendation is **"Advisory Only — Requires Clinician Sign-Off"**.
 
 Almesis Copilot is a deterministic-first, AI-assisted clinical decision support application and multilingual parent passport generator for pediatric **Chemotherapy-Induced Nausea & Vomiting (CINV)**, grounded in the **UZA July 2026 v2 Policy** (`Anti-emetica beleid CINV - V2.pdf`) and the **POGO 250111 Emetogenicity Classification Guideline**.

@@ -3,6 +3,8 @@
 Simple ReAct agent
 Agent generated with `agents-cli` version `1.5.0`
 
+**Live Cloud Run URL (`europe-west1`)**: [https://uc3-aimesis-cinv-745357398105.europe-west1.run.app/](https://uc3-aimesis-cinv-745357398105.europe-west1.run.app/)
+
 ## Project Structure
 
 ```
