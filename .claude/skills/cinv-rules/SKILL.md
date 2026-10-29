@@ -3,7 +3,7 @@ name: cinv-rules
 description: UZA v2 / POGO pediatric CINV clinical rules (emetogenicity risk, antiemetic dosing, hard contraindications, drug interactions) and the Casus 1-3 reference cases. Use when writing or reviewing risk classification, dose calculation, interaction screening, guardrails, or test cases for Almesis.
 ---
 
-Source of truth: `codelabs/uc3-aimesis-quickstart.lab.md` (read-only). Read its sections 1 (stories + Casus 1–3 table), 3 (risk/dosing/GEEN Dexamethasone) and 5 (negative safety tests) before changing clinical logic. Underlying PDFs/docx are in `codelabs/assets/` (quote paths — spaces in names). UZA July 2026 v2 policy wins; POGO 250111 is the cross-check.
+Source of truth: `uc3-aimesis-cinv/codelabs/uc3-aimesis-quickstart.lab.md` (read-only). Read its sections 1 (stories + Casus 1–3 table), 3 (risk/dosing/GEEN Dexamethasone) and 5 (negative safety tests) before changing clinical logic. Underlying PDFs/docx are in `uc3-aimesis-cinv/docs/`; current rule tables and Casus 1–3 live in `uc3-aimesis-cinv/app/agent.py` (quote paths — spaces in names). UZA July 2026 v2 policy wins; POGO 250111 is the cross-check.
 
 ## Rules to enforce in code (not in the LLM)
 

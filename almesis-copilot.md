@@ -17,31 +17,29 @@ Chemotherapy often causes nausea and vomiting (CINV). Doctors prevent it with an
 
 Today, clinicians search these documents by hand. Almesis puts it all in one place, in seconds, with the source shown.
 
-## Think of it as a small expert team
+## Think of it as one expert with a toolbox
 
-Imagine a hospital meeting room with six specialists. Each one has one job, and they pass notes to each other in order.
+We keep the organizers' design: one AI assistant (an ADK agent on Gemini 2.5 Flash) with a set of exact tools. The assistant decides which tool to use and explains the results; the tools do the real work in plain code.
 
-| Team member             | What they do in plain words                                                            |
-| ----------------------- | -------------------------------------------------------------------------------------- |
-| Risk agent              | Looks up the chemotherapy and says: low, moderate or high chance of sickness           |
-| Plan agent              | Picks which anti-sickness medicines are needed for that risk level and this child      |
-| Guideline agent         | Searches the official guidelines and brings back the exact passages, with page numbers |
-| Interaction agent       | Checks the child's other medicines for dangerous clashes                               |
-| Dosing tool             | Calculates the dose from the child's weight and size (this is plain code, not AI)      |
-| Writer (Gemini 2.5 Pro) | Turns everything above into one clear, readable answer                                 |
-| Guardrail agent         | Last check: are all the numbers and sources in the answer real?                        |
+| Tool                                | What it does in plain words                                                       |
+| ----------------------------------- | --------------------------------------------------------------------------------- |
+| `classify_regimen_emetogenicity`    | Looks up the chemotherapy and says: minimal, low, moderate or high chance of sickness |
+| `get_pogo_guideline_recommendation` | Picks the anti-sickness medicines for that risk and the child's age               |
+| `check_ddi_interactions`            | Checks the child's other medicines for dangerous clashes                          |
+| `calculate_risk_adjusted_regimen`   | Adjusts for this child: earlier nausea, anxiety, no steroids in ALL, and so on    |
+| `compute_antiemetic_doses`          | Calculates the dose from weight and body size, then the amount in mL              |
+| `search_guidelines`                 | Searches the UZA policy and POGO guideline and brings back passages with page numbers |
+| `build_parent_passport`             | Builds the day-by-day medicine card for parents                                   |
 
-The agents run in a fixed order (the first two one after another, the next three at the same time, then the writer, then the guardrail). We build this with Google's Agent Development Kit (ADK).
+A final check (the guardrail) runs on every answer before the clinician sees it.
 
 ## What happens when you press the button
 
-1. The clinician enters age, weight, height, the chemotherapy drugs, current medicines, and whether the child had CINV before.
-2. The risk agent finds the sickness risk from a table of chemotherapy drugs.
-3. The plan agent picks the anti-sickness medicines for that risk (for example, a previous bad experience can add one more medicine).
-4. Three specialists work at the same time: guidelines are searched, interactions are checked, doses are calculated.
-5. The writer combines everything into a short report with a table, warnings and sources.
-6. The guardrail checks the report. If a dose or a source does not match the facts, it removes that sentence.
-7. The screen shows the final plan, plus a trace of which agent did what.
+1. The clinician types the child's age, weight, height, chemotherapy, other medicines, and whether the child had CINV before.
+2. The assistant calls the tools in order: risk, recommended medicines, clashes, adjustments for this child, doses, guideline passages.
+3. It writes one short answer: UZA policy first, POGO as the cross-check, a dose table, warnings and sources with page numbers.
+4. The guardrail checks the answer. Any dose, amount or source that no tool produced is removed.
+5. The screen shows the answer plus a trace of every tool call.
 
 ## Why it is safe (the most important part)
 
@@ -52,41 +50,39 @@ Medicine is high stakes, so the design follows four rules:
 - **Everything has a source.** Each claim points to a guideline passage with a page number.
 - **Unchecked data is blocked.** Every table row has a verified flag. Rows nobody has checked are not used in a real setting.
 
-The result always ends with: Decision support only. Requires clinician review. The tool helps the doctor; it does not replace the doctor.
+The result always ends with: Advisory Only — Requires Clinician Sign-Off. The tool helps the doctor; it does not replace the doctor.
 
 ## The Google Cloud Architecure
 
 | Google service              | What it does here                                                  |
 | --------------------------- | ------------------------------------------------------------------ |
-| Gemini (on Vertex AI)       | The AI brain that reads, searches and writes                       |
-| ADK (Agent Development Kit) | Connects the agents into one team                                  |
-| BigQuery                    | The database with risk levels, doses and interaction rules         |
-| Vertex AI Search            | Searches the guideline PDFs and returns passages with page numbers |
-| Cloud Storage               | Stores the PDF files                                               |
-| Firestore                   | Keeps a record of every answer for auditing                        |
-| Cloud Run                   | Hosts the web app so anyone can open it with a link                |
+| Gemini 2.5 Flash (on Vertex AI) | The AI that understands the question, picks tools and writes the answer |
+| ADK (Agent Development Kit)     | Connects Gemini to the tools and the guardrail                          |
+| Cloud Run                       | Hosts the app (web UI and A2A API) so anyone can open it with a link    |
+| Cloud Trace / Logging           | Records every run and tool call                                         |
+| BigQuery, Vertex AI Search      | If time allows: rule tables and guideline search as managed services    |
 
-Everything runs in European regions, which matters for Belgian hospitals.
+Everything runs in `europe-west1`, which matters for Belgian hospitals.
 
-![Alt text](media/almesis_copilot_architecture_v2.png)
+![Alt text](media/almesis_copilot_architecture.png)
 
 ## The bonus feature: reading protocols
 
-A user can upload a long clinical trial protocol PDF. Gemini reads it and pulls out the chemotherapy drugs, doses, and the page and sentence each came from. These are saved as unchecked rows, and a clinician approves them before they are used. This builds the structured database the challenge asks for.
+If time allows: a user can upload a long clinical trial protocol PDF. Gemini reads it and pulls out the chemotherapy drugs, doses, and the page and sentence each came from. These are saved as unchecked rows, and a clinician approves them before they are used. This builds the structured database the challenge asks for.
 
 ## The 3-minute demo story
 
 1. **Enter a child (cisplatin, 7 years, 24 kg).** The screen shows high risk, a medicine plan, and sources with page numbers.
 2. **Add a medicine that clashes (voriconazole).** A warning appears.
 3. **Change the weight.** The doses change, and you can show the exact formula. Say: the AI never does the math.
-4. **Upload a protocol PDF.** The drugs appear in a table with their page and quote.
+4. **Switch the parent passport to Dutch.** A day-by-day card with amounts in mL only.
 5. **Close with safety.** Guardrail, sources, clinician review, European data.
 
 ## Lines you can use with the judges
 
-- One focused product, not four shallow ones: the other use cases (protocol search, Pediatric Prescriber) reuse the same agents.
+- One focused product, not four shallow ones: the other use cases (protocol search, Pediatric Prescriber) can reuse the same tools.
 - Built so a clinician can check every claim, which is what makes it usable in a hospital.
-- Uses the full Google stack for real reasons: Gemini, ADK multi-agent, Vertex AI Search, BigQuery, Cloud Run.
+- Uses the full Google stack for real reasons: Gemini, ADK, Cloud Run, with BigQuery and Vertex AI Search as next steps.
 - Safety by design: calculations in code, citations, a guardrail and a verification flag.
 
 ## Honest limits to mention
@@ -99,11 +95,11 @@ A user can upload a long clinical trial protocol PDF. Gemini reads it and pulls 
 
 - **CINV:** chemotherapy-induced nausea and vomiting.
 - **Emetogenicity:** how likely a drug is to cause vomiting.
-- **Agent:** an AI helper with one job and its own tools.
+- **Agent:** an AI helper that uses tools to do its job.
 - **RAG:** the AI first searches documents, then answers using what it found.
 - **Guardrail:** a final check that blocks wrong or unsupported answers.
 - **BSA:** body surface area, a body-size number used to dose children.
-- **ADK:** Google's toolkit for building teams of agents.
+- **ADK:** Google's toolkit for building agents.
 
 ## The organizers' brief
 
@@ -116,9 +112,6 @@ The organizers showed four steps for this use case. Here is how our solution lin
 | 3. Check patient characteristics   | Uses age, weight, body surface area and earlier nausea to fit the dose to the child and round it to a practical amount in mL       |
 | 4. Antiemetic passport for parents | A day-by-day card for days at home: times, medicine, amount in mL, and clinician-written instructions, in English, Dutch or French |
 
-Two new team members join the six specialists:
-
-- **Passport writer:** turns the checked schedule into a plain-language card for parents. It copies the instruction and rescue texts that a clinician wrote; it never invents medical advice.
-- **Passport guardrail:** checks every time and every amount in the card against the calculated schedule and removes anything that does not match.
+The passport is built by a tool from the calculated schedule. It copies the instruction and rescue texts that a clinician wrote and never invents medical advice; the guardrail checks every time and amount on it.
 
 The new demo ending: change the child's weight, watch the mL amount change, then switch the passport to Dutch.
