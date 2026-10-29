@@ -64,8 +64,8 @@ logger = logging.getLogger(__name__)
 
 CLASSIFICATION_ORDER = ["minimal", "low", "moderate", "high"]
 
-JSON_PATH = Path(__file__).parent / "pogo_single_antineoplastic_medicine.json"
-MULTI_JSON_PATH = Path(__file__).parent / "pogo_multi_antineoplastic_medicine.json"
+JSON_PATH = Path(__file__).parent / "risk_data" / "pogo_single_antineoplastic_medicine.json"
+MULTI_JSON_PATH = Path(__file__).parent / "risk_data" / "pogo_multi_antineoplastic_medicine.json"
 
 # Matches doses like "250mg", "1g/m2", "3g/m2/dose" after `_normalize_dose`.
 DOSE_PATTERN = re.compile(r"^(?P<value>\d+(?:\.\d+)?)(?P<unit>mg|g)(?P<per_m2>/m2)?(?:/dose)?$")
