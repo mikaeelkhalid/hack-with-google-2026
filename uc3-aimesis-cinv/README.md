@@ -8,13 +8,14 @@ Agent generated with `agents-cli` version `1.5.0`
 ```
 uc3-aimesis-cinv/
 ├── app/                       # Core agent code
+│   ├── streamlit_app.py       # Interactive multilingual (NL/FR/EN) Clinical & Parent Passport UI
 │   ├── agent.py               # Single root_agent (gemini-2.5-flash) & 7 tools
 │   ├── tables.py              # Verifiable clinical tables (UZA v2 + POGO 250111)
 │   ├── dosing.py              # Deterministic BSA, mg, rounding & mL dosing
 │   ├── guidelines.py          # Page-cited PDF guideline search
-│   ├── passport.py            # Multilingual (en/nl/fr) parent passport
+│   ├── passport.py            # Multilingual (en/nl/fr) parent passport & PDF export
 │   ├── guardrail.py           # Deterministic after_model_callback guardrail
-│   ├── fast_api_app.py        # FastAPI Backend server + ADK Web UI & A2A
+│   ├── fast_api_app.py        # FastAPI Backend server + Streamlit UI proxy + ADK Web UI & A2A
 │   └── app_utils/             # A2A and telemetry helpers
 ├── codelabs/                  # Official workshop codelab & guide
 ├── docs/                      # Canonical UZA CINV v2 & POGO 250111 PDFs + casus
@@ -33,25 +34,45 @@ Before you begin, ensure you have:
 - **Google Cloud SDK**: For GCP services - [Install](https://cloud.google.com/sdk/docs/install)
 
 
-## Quick Start
+## Quick Start (Step-by-Step Local Setup)
 
-Install `agents-cli` and its skills if not already installed:
+### 1. Install `agents-cli` and project dependencies
 
 ```bash
 uvx google-agents-cli setup
+uv sync   # or: agents-cli install
 ```
 
-Install required packages:
+### 2. Configure Environment Variables (`.env`)
+
+Copy `.env.example` to `.env`:
 
 ```bash
-agents-cli install
+cp .env.example .env
 ```
 
-Test the agent with a local web server:
+Edit `.env` with either **Vertex AI** (`gcloud auth application-default login` + `GOOGLE_CLOUD_PROJECT=<your-project-id>`) or **Google AI Studio** (`GOOGLE_GENAI_USE_VERTEXAI=false` + `GEMINI_API_KEY=<your-api-key>`). Keep `ALLOW_UNVERIFIED=1` enabled for local development.
 
-```bash
-agents-cli playground
-```
+### 3. Run the Application Locally
+
+- **Option A — Interactive Streamlit Clinical UI (Fastest):**
+  ```bash
+  uv run streamlit run app/streamlit_app.py
+  ```
+  Opens at `http://localhost:8501`.
+
+- **Option B — Full FastAPI Server (Streamlit UI + ADK Dev UI + A2A):**
+  ```bash
+  uv run uvicorn app.fast_api_app:app --host 0.0.0.0 --port 8000
+  ```
+  - Clinical & Parent Passport UI: `http://localhost:8000/ui/`
+  - ADK Developer Trace UI: `http://localhost:8000/dev-ui/`
+  - A2A Endpoint: `http://localhost:8000/a2a/app`
+
+- **Option C — ADK Playground (Auto-Reload):**
+  ```bash
+  agents-cli playground
+  ```
 
 You can also use features from the [ADK](https://adk.dev/) CLI with `uv run adk`.
 
