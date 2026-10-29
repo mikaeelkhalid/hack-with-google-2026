@@ -75,7 +75,11 @@ def build_parent_passport(
         vol_by_drug_day[(drug, day_tag)] = float(row["volume_ml"])
 
     max_delayed = max(
-        (int(sched_by_drug[d].get("delayed_days", 0)) for d in active_drugs if d in sched_by_drug),
+        (
+            int(sched_by_drug[d].get("delayed_days", 0))
+            for d in active_drugs
+            if d in sched_by_drug
+        ),
         default=2,
     )
     if max_delayed < 2:
@@ -98,7 +102,9 @@ def build_parent_passport(
                 continue
             if applies == "first_3_days" and day_num > 3:
                 continue
-            if applies == "chemo_and_delayed" and day_num > n_chemo + int(rule.get("delayed_days", 2)):
+            if applies == "chemo_and_delayed" and day_num > n_chemo + int(
+                rule.get("delayed_days", 2)
+            ):
                 continue
 
             # Resolve day-specific volume_ml (e.g., aprepitant D1 vs D2-D3)
@@ -175,7 +181,10 @@ def build_parent_passport(
         "belgian_family_resources": resources,
         "companion_app_diary": {
             "enabled": True,
-            "scales": ["Baxter Retching Faces (BARF 0-10)", "PeNAT Pediatric Nausea Assessment Tool"],
+            "scales": [
+                "Baxter Retching Faces (BARF 0-10)",
+                "PeNAT Pediatric Nausea Assessment Tool",
+            ],
             "red_flag_escalation": "Triggers oncology ward alert if >=3 emetic episodes in 24h or inability to keep fluids down >12h.",
         },
         "sources": sorted(sources),
@@ -185,3 +194,127 @@ def build_parent_passport(
     if tool_context is not None and hasattr(tool_context, "state"):
         tool_context.state["facts_passport"] = passport
     return passport
+
+
+def _pdf_safe(text: str) -> str:
+    """Normalizes Unicode punctuation to Latin-1 for standard PDF Helvetica fonts."""
+    replacements = {
+        "\u2014": "-",
+        "\u2013": "-",
+        "\u2022": "*",
+        "\u2265": ">=",
+        "\u2264": "<=",
+        "\u2019": "'",
+        "\u201c": '"',
+        "\u201d": '"',
+        "\u2192": "->",
+    }
+    out = str(text)
+    for k, v in replacements.items():
+        out = out.replace(k, v)
+    return out.encode("latin-1", errors="replace").decode("latin-1")
+
+
+def build_passport_pdf_bytes(
+    passport: dict[str, Any],
+    patient_summary: str = "",
+) -> bytes:
+    """Generates a printable A4 Parent Passport PDF in mL only (NL / FR / EN)."""
+    from fpdf import FPDF
+
+    lang = str(passport.get("language", "nl")).lower()
+    titles = {
+        "nl": "UZA Kinderoncologie - Anti-misselijkheid Paspoort voor Ouders (mL)",
+        "fr": "Oncologie Pediatrique UZA - Passeport Anti-Nausee Parents (mL)",
+        "en": "UZA Pediatric Oncology - Parent Anti-Nausea Passport (mL)",
+    }
+    slot_labels = {
+        "nl": {"morning": "[OCHTEND]", "noon": "[MIDDAG]", "evening": "[AVOND]"},
+        "fr": {"morning": "[MATIN]", "noon": "[MIDI]", "evening": "[SOIR]"},
+        "en": {"morning": "[MORNING]", "noon": "[NOON]", "evening": "[EVENING]"},
+    }.get(lang, {"morning": "[MORNING]", "noon": "[NOON]", "evening": "[EVENING]"})
+
+    pdf = FPDF(orientation="P", unit="mm", format="A4")
+    pdf.set_auto_page_break(auto=True, margin=14)
+    pdf.add_page()
+
+    # Header banner
+    pdf.set_fill_color(24, 24, 27)
+    pdf.set_text_color(255, 255, 255)
+    pdf.set_font("Helvetica", "B", 13)
+    pdf.cell(
+        0,
+        11,
+        _pdf_safe(titles.get(lang, titles["en"])),
+        new_x="LMARGIN",
+        new_y="NEXT",
+        fill=True,
+        align="C",
+    )
+    pdf.ln(3)
+
+    pdf.set_text_color(30, 30, 35)
+    if patient_summary:
+        pdf.set_font("Helvetica", "B", 10)
+        pdf.cell(0, 6, _pdf_safe(patient_summary), new_x="LMARGIN", new_y="NEXT")
+        pdf.ln(2)
+
+    # Schedule Table Header
+    pdf.set_fill_color(235, 238, 245)
+    pdf.set_font("Helvetica", "B", 10)
+    pdf.cell(28, 8, "Day", border=1, fill=True)
+    pdf.cell(42, 8, "Period", border=1, fill=True)
+    pdf.cell(25, 8, "Time", border=1, fill=True)
+    pdf.cell(55, 8, "Medication", border=1, fill=True)
+    pdf.cell(35, 8, "Volume (mL)", border=1, fill=True, new_x="LMARGIN", new_y="NEXT")
+
+    pdf.set_font("Helvetica", "", 10)
+    for day_obj in passport.get("days", []):
+        day_label = f"Day {day_obj['day']} ({day_obj['setting']})"
+        for entry in day_obj.get("entries", []):
+            hr = (
+                int(str(entry["time"]).split(":")[0])
+                if ":" in str(entry["time"])
+                else 8
+            )
+            slot_key = "morning" if hr < 12 else ("noon" if hr < 18 else "evening")
+            period_str = f"{slot_labels.get(slot_key, '[MORNING]')}"
+            pdf.cell(28, 7, _pdf_safe(day_label), border=1)
+            pdf.cell(42, 7, _pdf_safe(period_str), border=1)
+            pdf.cell(25, 7, _pdf_safe(str(entry["time"])), border=1)
+            pdf.cell(55, 7, _pdf_safe(str(entry["drug"]).capitalize()), border=1)
+            pdf.cell(
+                35,
+                7,
+                _pdf_safe(f"{entry['volume_ml']} mL"),
+                border=1,
+                new_x="LMARGIN",
+                new_y="NEXT",
+            )
+
+    pdf.ln(5)
+    pdf.set_font("Helvetica", "B", 11)
+    pdf.cell(
+        0,
+        7,
+        _pdf_safe("Instructions & Vomiting Rescue Rules:"),
+        new_x="LMARGIN",
+        new_y="NEXT",
+    )
+    pdf.set_font("Helvetica", "", 9)
+    for drug_name, instr in passport.get("instructions", {}).items():
+        line = f"* {drug_name.capitalize()}: {instr.get('instruction', '')} | Rescue: {instr.get('rescue', '')}"
+        pdf.multi_cell(0, 5, _pdf_safe(line), new_x="LMARGIN", new_y="NEXT")
+        pdf.ln(1)
+
+    pdf.ln(3)
+    pdf.set_font("Helvetica", "I", 8)
+    pdf.set_text_color(100, 100, 110)
+    pdf.cell(
+        0,
+        6,
+        _pdf_safe(f"Safety Notice: {ADVISORY_LABEL}"),
+        new_x="LMARGIN",
+        new_y="NEXT",
+    )
+    return bytes(pdf.output())
