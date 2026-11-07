@@ -1,0 +1,41 @@
+# Official Streamlit Minimal Dark Theme (from developing-with-streamlit)
+[theme]
+base = "dark"
+primaryColor = "#6366f1"
+backgroundColor = "#18181b"
+secondaryBackgroundColor = "#27272a"
+codeBackgroundColor = "#27272a"
+textColor = "#fafafa"
+linkColor = "#818cf8"
+borderColor = "#3f3f46"
+showWidgetBorder = true
+showSidebarBorder = true
+baseRadius = "8px"
+buttonRadius = "8px"
+paddingTop = "1.25rem"
+paddingBottom = "2rem"
+font = "Inter:https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+codeFont = "'JetBrains Mono':https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap"
+codeFontSize = "0.85rem"
+codeTextColor = "#e4e4e7"
+baseFontSize = 14
+baseFontWeight = 400
+headingFontSizes = ["30px", "22px", "18px", "16px", "14px", "12px"]
+headingFontWeights = [600, 600, 500, 500, 500, 500]
+linkUnderline = false
+dataframeBorderColor = "#3f3f46"
+dataframeHeaderBackgroundColor = "#27272a"
+dataframeHeaderTextColor = "#fafafa"
+
+violetColor = "#8b5cf6"
+blueColor = "#6366f1"
+greenColor = "#22c55e"
+yellowColor = "#f59e0b"
+orangeColor = "#f97316"
+redColor = "#ef4444"
+
+[theme.sidebar]
+backgroundColor = "#09090b"
+secondaryBackgroundColor = "#18181b"
+codeBackgroundColor = "#18181b"
+borderColor = "#27272a"
